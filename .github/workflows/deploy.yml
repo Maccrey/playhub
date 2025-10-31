@@ -1,0 +1,44 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: ./app
+
+      - name: Create .env.local file
+        run: |
+          echo "NEXT_PUBLIC_API_KEY=${{ secrets.NEXT_PUBLIC_API_KEY }}" >> .env.local
+          echo "NEXT_PUBLIC_AUTH_DOMAIN=${{ secrets.NEXT_PUBLIC_AUTH_DOMAIN }}" >> .env.local
+          echo "NEXT_PUBLIC_PROJECT_ID=${{ secrets.NEXT_PUBLIC_PROJECT_ID }}" >> .env.local
+          echo "NEXT_PUBLIC_STORAGE_BUCKET=${{ secrets.NEXT_PUBLIC_STORAGE_BUCKET }}" >> .env.local
+          echo "NEXT_PUBLIC_MESSAGING_SENDER_ID=${{ secrets.NEXT_PUBLIC_MESSAGING_SENDER_ID }}" >> .env.local
+          echo "NEXT_PUBLIC_APP_ID=${{ secrets.NEXT_PUBLIC_APP_ID }}" >> .env.local
+          echo "NEXT_PUBLIC_MEASUREMENT_ID=${{ secrets.NEXT_PUBLIC_MEASUREMENT_ID }}" >> .env.local
+        working-directory: ./app
+
+      - name: Build
+        run: npm run build
+        working-directory: ./app
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./app/out

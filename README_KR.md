@@ -130,3 +130,26 @@ Playwright E2E 테스트는 애플리케이션에 대해 실행되도록 구성�
     npx playwright test tests/e2e/auth.spec.ts
     ```
 
+## GitHub Pages 배포
+
+이 프로젝트는 `main` 브랜치에 푸시될 때 GitHub Actions를 통해 GitHub Pages에 자동으로 배포되도록 설정되어 있습니다.
+
+### 설정 방법
+
+1.  **GitHub 저장소 시크릿 설정:**
+    배포 시 Firebase 구성을 안전하게 사용하기 위해 GitHub 저장소에 시크릿을 설정해야 합니다. 다음 시크릿들을 `Settings > Secrets and variables > Actions` 에서 추가해주세요.
+
+    *   `NEXT_PUBLIC_API_KEY`
+    *   `NEXT_PUBLIC_AUTH_DOMAIN`
+    *   `NEXT_PUBLIC_PROJECT_ID`
+    *   `NEXT_PUBLIC_STORAGE_BUCKET`
+    *   `NEXT_PUBLIC_MESSAGING_SENDER_ID`
+    *   `NEXT_PUBLIC_APP_ID`
+    *   `NEXT_PUBLIC_MEASUREMENT_ID`
+
+    각 시크릿의 값은 Firebase 프로젝트의 웹 앱 구성에서 찾을 수 있습니다.
+
+2.  **배포 확인:**
+    `main` 브랜치에 변경 사항을 푸시하면, GitHub Actions 워크플로우가 자동으로 실행되어 프로젝트를 빌드하고 `gh-pages` 브랜치에 배포합니다. 배포 상태는 저장소의 `Actions` 탭에서 확인할 수 있습니다.
+
+    배포가 완료되면 `https://<YOUR_GITHUB_USERNAME>.github.io/playhub/` 에서 애플리케이션을 확인할 수 있습니다.
