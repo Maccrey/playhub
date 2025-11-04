@@ -31,9 +31,9 @@
     "typescript": "^5"
   },
   "optionalDependencies": {
-    "lightningcss-wasm32-wasi": "file:stubs/lightningcss-wasm32-wasi"
+    "lightningcss-wasm32-wasi": "file:./stubs/lightningcss-wasm32-wasi"
   },
   "overrides": {
-    "lightningcss-wasm32-wasi": "file:stubs/lightningcss-wasm32-wasi"
+    "lightningcss-wasm32-wasi": "file:./stubs/lightningcss-wasm32-wasi"
   }
 }
