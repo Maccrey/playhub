@@ -227,7 +227,7 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
         }
       }
     }
-  }, [timer, timerActive, roomData?.status, roomId, tallyVotesAndEliminatePlayer, t]);
+  }, [timer, timerActive, roomId, tallyVotesAndEliminatePlayer, t, roomData?.status]);
 
   const playersSource = roomData?.players ?? null;
 
