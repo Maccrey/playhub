@@ -16,6 +16,7 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
   const [guess, setGuess] = useState('');
   const [message, setMessage] = useState(INITIAL_MESSAGE);
   const [attempts, setAttempts] = useState(0);
+  const [attemptHistory, setAttemptHistory] = useState<number[]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const {user} = useUserStore();
@@ -25,6 +26,7 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
     setGuess('');
     setMessage(INITIAL_MESSAGE);
     setAttempts(0);
+    setAttemptHistory([]);
     setGameOver(false);
   }, []);
 
@@ -33,23 +35,24 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
     if (gameOver) return;
 
     const numericGuess = Number(guess);
-    if (!Number.isFinite(numericGuess) || numericGuess <= 0) {
-      setMessage('Please enter a valid number');
+    if (!Number.isFinite(numericGuess) || numericGuess <= 0 || numericGuess > 100) {
+      setMessage('Please enter a number between 1 and 100.');
       return;
     }
 
     const attemptCount = attempts + 1;
     setAttempts(attemptCount);
+    setAttemptHistory((prev) => [...prev, numericGuess]);
 
     if (numericGuess === targetNumber) {
-      setMessage(`You got it in ${attemptCount} attempts!`);
+      setMessage(`${numericGuess} is correct! You got it in ${attemptCount} attempts.`);
       setGameOver(true);
       const score = Math.max(0, 100 - attemptCount);
       onGameEnd(score);
     } else if (numericGuess < targetNumber) {
-      setMessage('Too low!');
+      setMessage(`${numericGuess} is too low. Guess higher! (Attempt ${attemptCount})`);
     } else {
-      setMessage('Too high!');
+      setMessage(`${numericGuess} is too high. Guess lower! (Attempt ${attemptCount})`);
     }
 
     setGuess('');
@@ -87,7 +90,22 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
         open={showInstructions}
         onClose={handleShowInstructions}
       />
-      <div className="text-xl mb-4">{message}</div>
+      <div className="text-xl mb-4" aria-live="polite">{message}</div>
+      {attemptHistory.length > 0 && (
+        <div className="w-full max-w-sm mb-4 text-sm text-gray-600">
+          <div className="font-semibold">Previous guesses</div>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {attemptHistory.map((value, index) => (
+              <li
+                key={`${value}-${index}`}
+                className="px-2 py-1 rounded bg-gray-200 text-gray-800"
+              >
+                #{index + 1}: {value}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {!gameOver && (
         <form onSubmit={handleGuess} className="flex space-x-2">
           <input
@@ -95,6 +113,10 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
             value={guess}
             onChange={(event) => setGuess(event.target.value)}
             className="px-4 py-2 border rounded-md"
+            min={1}
+            max={100}
+            inputMode="numeric"
+            autoComplete="off"
             autoFocus
           />
           <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded-md">
