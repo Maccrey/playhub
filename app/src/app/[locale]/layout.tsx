@@ -20,6 +20,11 @@ export default async function RootLayout({
 }>) {
   unstable_setRequestLocale(locale);
   const messages = await getMessages();
+  const kakaoAdUnit = process.env.NEXT_PUBLIC_KAKAO_AD_UNIT?.trim();
+  const shouldLoadAds =
+    kakaoAdUnit !== undefined &&
+    kakaoAdUnit !== '' &&
+    !kakaoAdUnit.toLowerCase().includes('xxxx');
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
@@ -32,11 +37,13 @@ export default async function RootLayout({
           <Footer />
         </div>
       </AuthProvider>
-      <Script
-        async
-        type="text/javascript"
-        src="//t1.daumcdn.net/kas/static/ba.min.js"
-      />
+      {shouldLoadAds && (
+        <Script
+          async
+          type="text/javascript"
+          src="//t1.daumcdn.net/kas/static/ba.min.js"
+        />
+      )}
     </NextIntlClientProvider>
   );
 }
