@@ -130,6 +130,56 @@
       "body": "단어를 이루는 글자를 하나씩 추측하세요. 틀릴 때마다 행맨 그림이 완성됩니다. 최대 {maxGuesses}번까지 실수할 수 있으니 신중하게 선택하세요."
     }
   },
+  "Mafia": {
+    "title": "마피아 게임",
+    "createRoom": "방 만들기",
+    "joinRoom": "방 참여",
+    "or": "또는",
+    "codePlaceholder": "방 코드를 입력하세요",
+    "anonymous": "익명",
+    "alerts": {
+      "loginRequiredCreate": "방을 만들려면 로그인해야 합니다.",
+      "loginRequiredJoin": "방에 참여하려면 로그인해야 합니다.",
+      "roomCreated": "방이 생성되었습니다: {code}",
+      "enterRoomCode": "방 코드를 입력해 주세요.",
+      "joinFailed": "방 참여에 실패했습니다. 방 코드를 확인하거나 다시 시도해 주세요.",
+      "playerEliminated": "{name}님이 제거되었습니다!",
+      "citizensWin": "시민 승리! 마피아를 모두 제거했습니다.",
+      "mafiaWin": "마피아 승리! 마피아 수가 시민보다 많거나 같습니다.",
+      "tie": "동점이라 아무도 제거되지 않았습니다!"
+    },
+    "room": {
+      "invalid": "잘못되었거나 누락된 방 ID입니다.",
+      "loading": "방 정보를 불러오는 중...",
+      "notFound": "방을 찾을 수 없거나 종료되었습니다.",
+      "label": "방: {roomId}",
+      "discussionTimer": "토론 시간 남음: {seconds}초",
+      "votingTimer": "투표 시간 남음: {seconds}초",
+      "playersHeading": "플레이어 (생존 {count}명):",
+      "roleSuffix": " (당신의 역할은 {role})",
+      "roles": {
+        "mafia": "마피아",
+        "citizen": "시민"
+      },
+      "votePrompt": "제거할 플레이어를 선택하세요:",
+      "startGame": "게임 시작",
+      "discussionInfo": "토론 단계입니다. 마피아와 시민이 서로를 추리할 수 있습니다.",
+      "votingInfo": "투표 단계입니다. 제거할 플레이어를 선택하세요. 가장 많은 표를 받은 플레이어가 제거됩니다.",
+      "endedTitle": "게임이 종료되었습니다.",
+      "endedDescription": "로비로 돌아가 새로운 게임을 시작할 수 있습니다.",
+      "logs": {
+        "gameStarted": "게임이 시작되었습니다. 역할이 배정되었습니다.",
+        "playerVoted": "{voter}님이 {target}님에게 투표했습니다.",
+        "playerEliminated": "{name}님이 제거되었습니다.",
+        "citizensWin": "게임 종료. 시민 승리!",
+        "mafiaWin": "게임 종료. 마피아 승리!",
+        "discussionEnded": "토론 시간이 끝났습니다. 투표 단계로 이동합니다.",
+        "votingEnded": "투표 시간이 끝났습니다. 투표 결과를 집계합니다.",
+        "tie": "동점이라 아무도 제거되지 않았습니다.",
+        "discussionNext": "다음 토론 단계로 이동합니다."
+      }
+    }
+  },
   "GuessTheNumber": {
     "initial": "1부터 100 사이의 숫자를 맞춰 보세요.",
     "invalid": "1부터 100 사이의 숫자를 입력해 주세요.",

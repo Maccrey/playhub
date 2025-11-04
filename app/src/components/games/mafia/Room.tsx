@@ -1,6 +1,7 @@
 'use client';
 
 import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useTranslations} from 'next-intl';
 import {off, onValue, ref, update} from 'firebase/database';
 import {db} from '@/lib/firebase';
 import useUserStore from '@/store/userStore';
@@ -35,6 +36,7 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [myVote, setMyVote] = useState<string | null>(null);
+  const t = useTranslations('Mafia');
 
   useEffect(() => {
     if (!roomId) {
@@ -72,9 +74,9 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       const playerIds = Object.keys(roomData.players);
       await assignMafiaRoles(roomId, playerIds);
       await updateMafiaRoomStatus(roomId, 'playing');
-      addGameLog(roomId, 'Game started. Roles assigned.');
+      addGameLog(roomId, t('room.logs.gameStarted'));
     }
-  }, [user, roomData, roomId]);
+  }, [user, roomData, roomId, t]);
 
   const handleVote = useCallback(
     async (votedPlayerId: string) => {
@@ -82,9 +84,11 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       setMyVote(votedPlayerId);
       const roomRef = ref(db, `mafiaRooms/${roomId}/votes`);
       await update(roomRef, {[user.uid]: votedPlayerId});
-      addGameLog(roomId, `${user.displayName} voted for ${roomData.players[votedPlayerId].displayName}.`);
+      const voterName = user.displayName || t('room.anonymous');
+      const targetName = roomData.players[votedPlayerId].displayName;
+      addGameLog(roomId, t('room.logs.playerVoted', {voter: voterName, target: targetName}));
     },
-    [user, roomData, roomId]
+    [user, roomData, roomId, t]
   );
 
   const tallyVotesAndEliminatePlayer = useCallback(async () => {
@@ -108,33 +112,34 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
     }
 
     if (eliminatedPlayerId) {
+      const eliminatedName = roomData.players[eliminatedPlayerId].displayName;
       await updatePlayerStatus(roomId, eliminatedPlayerId, false);
-      alert(`${roomData.players[eliminatedPlayerId].displayName} has been eliminated!`);
-      addGameLog(roomId, `${roomData.players[eliminatedPlayerId].displayName} was eliminated.`);
+      window.alert(t('alerts.playerEliminated', {name: eliminatedName}));
+      addGameLog(roomId, t('room.logs.playerEliminated', {name: eliminatedName}));
 
       const alivePlayers = Object.entries(roomData.players).filter(([, player]) => player.isAlive !== false);
       const aliveMafia = alivePlayers.filter(([, player]) => player.role === 'mafia').length;
       const aliveCitizens = alivePlayers.filter(([, player]) => player.role === 'citizen').length;
 
       if (aliveMafia === 0) {
-        alert('Citizens win! All Mafia eliminated.');
-        addGameLog(roomId, 'Game ended. Citizens win!');
+        window.alert(t('alerts.citizensWin'));
+        addGameLog(roomId, t('room.logs.citizensWin'));
         await updateMafiaRoomStatus(roomId, 'ended');
       } else if (aliveMafia >= aliveCitizens) {
-        alert('Mafia win! Mafia outnumber or equal citizens.');
-        addGameLog(roomId, 'Game ended. Mafia win!');
+        window.alert(t('alerts.mafiaWin'));
+        addGameLog(roomId, t('room.logs.mafiaWin'));
         await updateMafiaRoomStatus(roomId, 'ended');
       } else {
         await updateMafiaRoomStatus(roomId, 'discussion');
-        addGameLog(roomId, 'Moving to next discussion phase.');
+        addGameLog(roomId, t('room.logs.discussionNext'));
       }
     } else {
-      alert('No one was eliminated due to a tie!');
-      addGameLog(roomId, 'No one was eliminated due to a tie.');
+      window.alert(t('alerts.tie'));
+      addGameLog(roomId, t('room.logs.tie'));
       await updateMafiaRoomStatus(roomId, 'discussion');
-      addGameLog(roomId, 'Moving to next discussion phase.');
+      addGameLog(roomId, t('room.logs.discussionNext'));
     }
-  }, [roomData, roomId]);
+  }, [roomData, roomId, t]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -156,15 +161,15 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       });
       if (roomData?.status === 'playing' && roomId) {
         updateMafiaRoomStatus(roomId, 'voting');
-        addGameLog(roomId, 'Discussion time ended. Moving to voting phase.');
+        addGameLog(roomId, t('room.logs.discussionEnded'));
       } else if (roomData?.status === 'voting') {
         tallyVotesAndEliminatePlayer();
         if (roomId) {
-          addGameLog(roomId, 'Voting time ended. Tallying votes.');
+          addGameLog(roomId, t('room.logs.votingEnded'));
         }
       }
     }
-  }, [timer, timerActive, roomData?.status, roomId, tallyVotesAndEliminatePlayer]);
+  }, [timer, timerActive, roomData?.status, roomId, tallyVotesAndEliminatePlayer, t]);
 
   const playersSource = roomData?.players ?? null;
 
@@ -177,16 +182,26 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
     }));
   }, [playersSource]);
 
+  const getRoleLabel = useCallback(
+    (role?: string) => {
+      if (!role) return '';
+      if (role === 'mafia') return t('room.roles.mafia');
+      if (role === 'citizen') return t('room.roles.citizen');
+      return role;
+    },
+    [t]
+  );
+
   if (!roomId) {
-    return <div className="text-center mt-8 text-red-500">Invalid or missing room id.</div>;
+    return <div className="text-center mt-8 text-red-500">{t('room.invalid')}</div>;
   }
 
   if (loading) {
-    return <div className="text-center mt-8">Loading room...</div>;
+    return <div className="text-center mt-8">{t('room.loading')}</div>;
   }
 
   if (!roomData) {
-    return <div className="text-center mt-8 text-red-500">Room not found or has ended.</div>;
+    return <div className="text-center mt-8 text-red-500">{t('room.notFound')}</div>;
   }
 
   const alivePlayers = playersArray.filter((player) => player.isAlive);
@@ -195,26 +210,28 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900">Room: {roomId}</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-900">{t('room.label', {roomId})}</h1>
         {roomData.status === 'playing' && (
-          <div className="text-2xl font-bold text-center text-red-600">Discussion Time Left: {timer}s</div>
+          <div className="text-2xl font-bold text-center text-red-600">{t('room.discussionTimer', {seconds: timer})}</div>
         )}
         {roomData.status === 'voting' && (
-          <div className="text-2xl font-bold text-center text-blue-600">Voting Time Left: {timer}s</div>
+          <div className="text-2xl font-bold text-center text-blue-600">{t('room.votingTimer', {seconds: timer})}</div>
         )}
-        <h2 className="text-xl font-semibold">Players ({alivePlayers.length} alive):</h2>
+        <h2 className="text-xl font-semibold">{t('room.playersHeading', {count: alivePlayers.length})}</h2>
         <ul className="list-disc list-inside">
           {playersArray.map((player) => (
             <li key={player.id} className={!player.isAlive ? 'line-through text-gray-500' : ''}>
               {player.displayName}
-              {user && user.uid === player.id && player.role && ` (You are ${player.role})`}
+              {user && user.uid === player.id && player.role && (
+                <span>{t('room.roleSuffix', {role: getRoleLabel(player.role)})}</span>
+              )}
             </li>
           ))}
         </ul>
 
         {roomData.status === 'voting' && user && (
           <div className="mt-4">
-            <h3 className="text-lg font-semibold mb-2">Vote for someone to eliminate:</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('room.votePrompt')}</h3>
             <div className="grid grid-cols-2 gap-2">
               {alivePlayers
                 .filter((player) => player.id !== user.uid)
@@ -238,25 +255,21 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
             onClick={handleStartGame}
             className="w-full px-4 py-2 text-lg font-semibold text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
-            Start Game
+            {t('room.startGame')}
           </button>
         )}
 
         {roomData.status === 'playing' && (
-          <p className="text-center text-gray-700">
-            Discussion phase is ongoing. Mafia and citizens can discuss who they think is suspicious.
-          </p>
+          <p className="text-center text-gray-700">{t('room.discussionInfo')}</p>
         )}
         {roomData.status === 'voting' && (
-          <p className="text-center text-gray-700">
-            Voting phase is active. Select a player to vote out. Highest votes will be eliminated.
-          </p>
+          <p className="text-center text-gray-700">{t('room.votingInfo')}</p>
         )}
 
         {roomData.status === 'ended' && (
           <div className="text-center">
-            <p className="text-xl font-semibold text-gray-800">Game has ended.</p>
-            <p className="text-gray-600">You can return to the lobby to start a new game.</p>
+            <p className="text-xl font-semibold text-gray-800">{t('room.endedTitle')}</p>
+            <p className="text-gray-600">{t('room.endedDescription')}</p>
           </div>
         )}
       </div>

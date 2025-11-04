@@ -99,7 +99,7 @@ export const getGlobalRanking = async (gameId: string) => {
   }
 };
 
-import { ref, set, get, update, push } from "firebase/database";
+import { ref, set, get, update, push, serverTimestamp as dbServerTimestamp } from "firebase/database";
 import { db } from "./firebase";
 
 export const createMafiaRoom = async (hostId: string) => {
@@ -110,7 +110,7 @@ export const createMafiaRoom = async (hostId: string) => {
   try {
     await set(roomRef, {
       hostId,
-      createdAt: serverTimestamp(),
+      createdAt: dbServerTimestamp(),
       players: {},
       status: 'waiting',
     });
@@ -213,7 +213,7 @@ export const addGameLog = async (roomId: string, message: string) => {
   if (!ensureFirebase('addGameLog')) return false;
   const logRef = ref(db, `mafiaRooms/${roomId}/logs`);
   try {
-    await push(logRef, { message, timestamp: serverTimestamp() });
+    await push(logRef, { message, timestamp: dbServerTimestamp() });
     return true;
   } catch (error) {
     console.error("Error adding game log", error);

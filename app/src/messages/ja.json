@@ -130,6 +130,56 @@
       "body": "単語に使われている文字を1つずつ推測します。間違えるたびにハングマンの絵が描かれていきます。ミスは最大{maxGuesses}回までなので慎重に選びましょう。"
     }
   },
+  "Mafia": {
+    "title": "マフィアゲーム",
+    "createRoom": "部屋を作成",
+    "joinRoom": "部屋に参加",
+    "or": "または",
+    "codePlaceholder": "部屋コードを入力",
+    "anonymous": "匿名",
+    "alerts": {
+      "loginRequiredCreate": "部屋を作成するにはログインが必要です。",
+      "loginRequiredJoin": "部屋に参加するにはログインが必要です。",
+      "roomCreated": "部屋が作成されました: {code}",
+      "enterRoomCode": "部屋コードを入力してください。",
+      "joinFailed": "部屋に参加できませんでした。コードを確認してもう一度お試しください。",
+      "playerEliminated": "{name} が追放されました！",
+      "citizensWin": "市民チームの勝利！マフィアをすべて見つけました。",
+      "mafiaWin": "マフィアチームの勝利！マフィアが市民に追いつきました。",
+      "tie": "同票のため誰も追放されませんでした！"
+    },
+    "room": {
+      "invalid": "無効な部屋IDです。",
+      "loading": "部屋を読み込み中...",
+      "notFound": "部屋が見つからないか、すでに終了しています。",
+      "label": "部屋: {roomId}",
+      "discussionTimer": "議論時間の残り: {seconds}秒",
+      "votingTimer": "投票時間の残り: {seconds}秒",
+      "playersHeading": "プレイヤー（生存 {count}人）:",
+      "roleSuffix": "（あなたの役職は {role} です）",
+      "roles": {
+        "mafia": "マフィア",
+        "citizen": "市民"
+      },
+      "votePrompt": "追放するプレイヤーを選んでください:",
+      "startGame": "ゲーム開始",
+      "discussionInfo": "現在は議論フェーズです。マフィアと市民が怪しい相手を話し合います。",
+      "votingInfo": "現在は投票フェーズです。追放したいプレイヤーを選んでください。最多得票者が追放されます。",
+      "endedTitle": "ゲームが終了しました。",
+      "endedDescription": "ロビーに戻って新しいゲームを始めましょう。",
+      "logs": {
+        "gameStarted": "ゲームが開始され、役職が割り当てられました。",
+        "playerVoted": "{voter} が {target} に投票しました。",
+        "playerEliminated": "{name} が追放されました。",
+        "citizensWin": "ゲーム終了。市民チームの勝利！",
+        "mafiaWin": "ゲーム終了。マフィアチームの勝利！",
+        "discussionEnded": "議論時間が終了しました。投票フェーズに移ります。",
+        "votingEnded": "投票時間が終了しました。票を集計します。",
+        "tie": "同票のため誰も追放されませんでした。",
+        "discussionNext": "次の議論フェーズに進みます。"
+      }
+    }
+  },
   "GuessTheNumber": {
     "initial": "1から100の数字を当ててください。",
     "invalid": "1から100の範囲で入力してください。",
