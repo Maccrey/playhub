@@ -25,6 +25,8 @@ const Header = () => {
     zh: '中文',
     ja: '日本語',
   };
+  const navItemClass = 'px-3 py-2 rounded-md hover:bg-gray-700 transition-colors duration-200';
+  const navTextClass = 'px-3 py-2 rounded-md bg-gray-700/50';
 
   return (
     <header className="bg-gray-800 text-white p-4">
@@ -32,20 +34,24 @@ const Header = () => {
         <Link href="/" className="text-2xl font-bold">
           {t('title')}
         </Link>
-        <nav className="flex items-center">
-          <Link href="/" className="mr-4">Home</Link>
+        <nav className="flex items-center gap-3">
+          <Link href="/" className={navItemClass}>Home</Link>
           {user ? (
             <>
-              <Link href="/profile" className="mr-4">{t('profile')}</Link>
-              <span className="mr-4">{user.displayName || 'Guest'}</span>
-              <button onClick={logout} className="mr-4">{t('logout')}</button>
+              <Link href="/profile" className={navItemClass}>{t('profile')}</Link>
+              <span className={navTextClass}>{user.displayName || 'Guest'}</span>
+              <button type="button" onClick={logout} className={navItemClass}>{t('logout')}</button>
             </>
           ) : (
-            <Link href="/login">{t('login')}</Link>
+            <Link href="/login" className={navItemClass}>{t('login')}</Link>
           )}
           <div className="relative">
-            <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="flex items-center focus:outline-none">
-              <Image src="/globe.svg" alt="Language" width={20} height={20} className="mr-1" />
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`flex items-center gap-2 focus:outline-none ${navItemClass}`}
+            >
+              <Image src="/globe.svg" alt="Language" width={20} height={20} />
               {localeNames[locale]}
             </button>
             {isDropdownOpen && (
