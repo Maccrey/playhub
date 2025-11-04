@@ -27,6 +27,8 @@ const Header = () => {
   };
   const navItemClass = 'px-3 py-2 rounded-md hover:bg-gray-700 transition-colors duration-200';
   const navTextClass = 'px-3 py-2 rounded-md bg-gray-700/50';
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH && process.env.NEXT_PUBLIC_BASE_PATH !== '/' ? process.env.NEXT_PUBLIC_BASE_PATH : '';
+  const globeIconSrc = `${basePath}/globe.svg`;
 
   return (
     <header className="bg-gray-800 text-white p-4">
@@ -51,7 +53,7 @@ const Header = () => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className={`flex items-center gap-2 focus:outline-none ${navItemClass}`}
             >
-              <Image src="/globe.svg" alt="Language" width={20} height={20} className="h-5 w-5" />
+              <Image src={globeIconSrc} alt="Language" width={20} height={20} className="h-5 w-5" />
               {localeNames[locale]}
             </button>
             {isDropdownOpen && (
