@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useMemo, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {off, onValue, ref, update} from 'firebase/database';
 import {db} from '@/lib/firebase';
@@ -47,6 +47,8 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   const [discussionMessages, setDiscussionMessages] = useState<Array<MafiaDiscussionMessage & {id: string}>>([]);
   const t = useTranslations('Mafia');
   const MESSAGE_MAX_LENGTH = 200;
+  const discussionContainerRef = useRef<HTMLDivElement | null>(null);
+  const previousStatusRef = useRef<MafiaRoomStatus | null>(null);
 
   useEffect(() => {
     if (!roomId) {
@@ -59,17 +61,23 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       const data = snapshot.val() as RoomData | null;
       if (data) {
         setRoomData(data);
-        if (data.status === 'playing' && !timerActive) {
+        const previousStatus = previousStatusRef.current;
+        const nextStatus = data.status;
+
+        if (nextStatus === 'playing' && previousStatus !== 'playing') {
           setTimer(60);
           setTimerActive(true);
-        } else if (data.status === 'voting' && !timerActive) {
+        } else if (nextStatus === 'voting' && previousStatus !== 'voting') {
           setTimer(30);
           setTimerActive(true);
-        } else if (data.status !== 'playing' && data.status !== 'voting' && timerActive) {
+        } else if (nextStatus !== 'playing' && nextStatus !== 'voting' && previousStatus !== nextStatus) {
           setTimerActive(false);
         }
+
+        previousStatusRef.current = nextStatus;
       } else {
         setRoomData(null);
+        previousStatusRef.current = null;
       }
       setLoading(false);
     });
@@ -77,7 +85,7 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
     return () => {
       off(roomRef, 'value', unsubscribe);
     };
-  }, [roomId, timerActive]);
+  }, [roomId]);
 
   useEffect(() => {
     if (!roomId) {
@@ -110,6 +118,14 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       }
     };
   }, [roomId]);
+
+  useEffect(() => {
+    if (!discussionContainerRef.current) return;
+    const node = discussionContainerRef.current;
+    requestAnimationFrame(() => {
+      node.scrollTop = node.scrollHeight;
+    });
+  }, [discussionMessages]);
 
   const handleStartGame = useCallback(async () => {
     if (user && roomData && user.uid === roomData.hostId && roomId) {
@@ -368,7 +384,10 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
 
         <div className="space-y-3">
           <h3 className="text-lg font-semibold text-gray-900">{t('room.discussion.title')}</h3>
-          <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
+          <div
+            ref={discussionContainerRef}
+            className="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50"
+          >
             {discussionMessages.length === 0 ? (
               <p className="text-sm text-gray-500">{t('room.discussion.noMessages')}</p>
             ) : (
