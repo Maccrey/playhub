@@ -356,10 +356,14 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
                     key={player.id}
                     onClick={() => handleVote(player.id)}
                     className={`px-4 py-2 rounded-md ${
-                      myVote === player.id ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-700'
-                    } hover:bg-red-600 hover:text-white`}
+                      myVote === player.id
+                        ? 'bg-red-600 text-white border-2 border-red-700 shadow focus:ring-2 focus:ring-red-500'
+                        : 'bg-gray-200 text-gray-700 hover:bg-red-100'
+                    } transition-colors duration-150`}
+                    aria-pressed={myVote === player.id}
                   >
-                    {player.displayName}
+                    <span className="font-semibold">{player.displayName}</span>
+                    {myVote === player.id && <span className="ml-2 text-xs">✓</span>}
                   </button>
                 ))}
             </div>
