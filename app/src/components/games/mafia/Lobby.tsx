@@ -5,6 +5,8 @@ import {useEffect, useState} from 'react';
 import {useTranslations, useLocale} from 'next-intl';
 import {usePathname, useRouter} from '@/navigation';
 import {createMafiaRoom, joinMafiaRoom, listenToMafiaRooms, MafiaRoomStatus} from '@/lib/firestore';
+import {ref, remove} from 'firebase/database';
+import {db} from '@/lib/firebase';
 import useUserStore from '@/store/userStore';
 
 const Lobby = () => {
@@ -104,16 +106,27 @@ const Lobby = () => {
           const createdAtValue = typeof room?.createdAt === 'number' ? room.createdAt : 0;
           const statusValue = (room?.status ?? 'waiting') as MafiaRoomStatus;
           const languageValue = typeof room?.language === 'string' ? room.language : 'unknown';
+          const isHostPresent = Boolean(room?.players && room.players[room.hostId]);
           return {
             id,
             name: room?.name?.trim() || id,
             status: statusValue,
             playerCount: players,
             createdAt: createdAtValue,
-            language: languageValue
+            language: languageValue,
+            hostPresent: isHostPresent
           };
         })
-        .filter((room) => room.status === 'waiting')
+        .filter((room) => {
+          if (room.status !== 'waiting') return false;
+          const oneHourAgo = Date.now() - 60 * 60 * 1000;
+          const isExpired = room.createdAt && room.createdAt < oneHourAgo;
+          if (!room.hostPresent || isExpired) {
+            remove(ref(db, `mafiaRooms/${room.id}`)).catch(() => undefined);
+            return false;
+          }
+          return true;
+        })
         .sort((a, b) => b.createdAt - a.createdAt);
 
       setRooms(parsed);
