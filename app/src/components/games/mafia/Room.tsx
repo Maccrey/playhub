@@ -13,7 +13,8 @@ import {
   MafiaRoomStatus,
   addMafiaDiscussionMessage,
   listenToMafiaDiscussionMessages,
-  MafiaDiscussionMessage
+  MafiaDiscussionMessage,
+  joinMafiaRoom
 } from '@/lib/firestore';
 
 interface Player {
@@ -254,6 +255,15 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   const isDiscussionPhase = roomStatus === 'playing' || roomStatus === 'discussion';
   const canSendDiscussionMessage = Boolean(user && roomId && isDiscussionPhase);
 
+  useEffect(() => {
+    if (!user || !roomId || !roomData) return;
+    if (roomData.players && roomData.players[user.uid]) return;
+    if (roomData.status !== 'waiting') return;
+
+    const displayName = user.displayName || t('anonymous');
+    joinMafiaRoom(roomId, user.uid, displayName).catch(() => undefined);
+  }, [user, roomId, roomData, t]);
+
   const handleDiscussionSubmit = useCallback(
     async (event?: React.FormEvent) => {
       if (event) {
@@ -423,6 +433,12 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
                   setDiscussionInput(value);
                   if (discussionError && value.trim().length <= MESSAGE_MAX_LENGTH) {
                     setDiscussionError(null);
+                  }
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    handleDiscussionSubmit();
                   }
                 }}
                 placeholder={t('room.discussion.placeholder')}
