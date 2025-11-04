@@ -1,0 +1,29 @@
+const withNextIntl = require('next-intl/plugin')();
+
+const normalizeBasePath = (value) => {
+  if (!value) return '';
+  const trimmed = value.replace(/\/+$/, '');
+  if (!trimmed || trimmed === '/') return '';
+  return trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+};
+
+const repository = process.env.GITHUB_REPOSITORY?.split('/') ?? [];
+const repoName = repository[1];
+const isGithubPages = process.env.GITHUB_PAGES === 'true';
+const isUserOrOrgPage = repoName ? repoName.toLowerCase().endsWith('.github.io') : false;
+const explicitBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? process.env.BASE_PATH;
+const inferredBasePath = isGithubPages && repoName && !isUserOrOrgPage ? `/${repoName}` : '';
+const basePath = normalizeBasePath(explicitBasePath ?? inferredBasePath);
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true,
+  },
+  basePath: basePath || undefined,
+  assetPrefix: basePath || undefined,
+};
+
+module.exports = withNextIntl(nextConfig);

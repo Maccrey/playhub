@@ -1,0 +1,133 @@
+{
+  "Header": {
+    "title": "PlayHub",
+    "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile"
+  },
+  "Footer": {
+    "copy": "© 2025 PlayHub. All rights reserved."
+  },
+  "Home": {
+    "title": "Mini Games",
+    "popular": "Popular",
+    "latest": "Latest",
+    "favorites": "Favorites",
+    "games": {
+      "tictactoe": "Tic-Tac-Toe",
+      "card-flip": "Card Flip",
+      "guess-the-number": "Guess the Number",
+      "merge-dice": "Merge Dice",
+      "maze-escape": "Maze Escape",
+      "mafia": "Mafia Game",
+      "color-reaction": "Color Reaction",
+      "snake-game": "Snake Game",
+      "2048-game": "2048 Game",
+      "block-dodger": "Block Dodger",
+      "rock-paper-scissors": "Rock Paper Scissors",
+      "word-puzzle": "Word Puzzle",
+      "click-challenge": "Click Challenge",
+      "simon-game": "Simon Game",
+      "mini-chess": "Mini Chess",
+      "math-quiz": "Math Quiz",
+      "color-match": "Color Match",
+      "number-pyramid": "Number Pyramid",
+      "daily-mission": "Daily Mission",
+      "speed-typing": "Speed Typing",
+      "hangman-game": "Hangman Game"
+    }
+  },
+  "GameToolbar": {
+    "home": "Home",
+    "restart": "Restart",
+    "saveScore": "Save Score",
+    "howToPlay": "How to Play"
+  },
+  "GameInstructions": {
+    "confirm": "Got it!",
+    "tictactoe": {
+      "title": "How to Play Tic-Tac-Toe",
+      "body": "Tic-Tac-Toe is a classic game played on a 3x3 grid. Two players take turns marking a square with their symbol (X or O). The first player to get three marks in a row—horizontally, vertically, or diagonally—wins the round."
+    },
+    "card-flip": {
+      "title": "How to Play Card Flip",
+      "body": "Flip two cards at a time to find matching pairs. Try to remember the position of each card so you can clear the board in as few moves as possible. Every successful match increases your score."
+    },
+    "guess-the-number": {
+      "title": "How to Play Guess the Number",
+      "body": "Guess the secret number between 1 and 100. After each guess you will be told whether the answer is higher or lower. Use the hints to find the number in the fewest attempts possible."
+    },
+    "merge-dice": {
+      "title": "How to Play Merge Dice",
+      "body": "Place the next die on the 5x5 board. Merge three or more adjacent dice with the same number to create a higher value. Plan your moves carefully to keep the board clear and push your score higher."
+    },
+    "maze-escape": {
+      "title": "How to Play Maze Escape",
+      "body": "Guide the player (P) through the maze to reach the exit (E). Use the arrow keys to move, avoid the walls, and find the quickest route out of the maze."
+    },
+    "mafia": {
+      "title": "How to Play Mafia Game",
+      "body": "Create or join a room with friends, then follow the host's instructions. Use discussion, deduction, and voting to uncover the mafia before they eliminate the citizens."
+    },
+    "color-reaction": {
+      "title": "How to Play Color Reaction",
+      "body": "Wait until the screen turns green, then click as fast as you can. Clicking too early counts as a false start. Your reaction time determines your score—the faster the better."
+    },
+    "snake-game": {
+      "title": "How to Play Snake Game",
+      "body": "Use the arrow keys to move the snake and eat the red food. Each snack makes the snake grow longer and increases your score. Avoid hitting the walls or your own tail to keep the run alive."
+    },
+    "2048-game": {
+      "title": "How to Play 2048",
+      "body": "Use the arrow keys or WASD to slide every tile in that direction. Tiles with the same value merge once per move, doubling the number and adding to your score. A new 2 or 4 appears after each slide, so plan chains, keep lanes open, and aim to build the 2048 tile (or higher) without filling the board."
+    },
+    "block-dodger": {
+      "title": "How to Play Block Dodger",
+      "body": "Move the blue square left and right to dodge the falling red blocks. Stay alive for as long as you can—lasting longer means a higher score."
+    },
+    "rock-paper-scissors": {
+      "title": "How to Play Rock Paper Scissors",
+      "body": "Choose rock, paper, or scissors and face off against the computer. Rock beats scissors, scissors beats paper, and paper beats rock. Win more rounds to raise your score."
+    },
+    "word-puzzle": {
+      "title": "How to Play Word Puzzle",
+      "body": "Unscramble the provided letters to form the correct word. Select letters to build your answer, submit to check, and clear if you want to try again. Correct answers earn points."
+    },
+    "click-challenge": {
+      "title": "How to Play Click Challenge",
+      "body": "Smash the button as many times as possible before the timer runs out. Quick clicking is the key to a high score."
+    },
+    "simon-game": {
+      "title": "How to Play Simon Game",
+      "body": "Watch the sequence of flashing colors and sounds, then repeat it by pressing the buttons in the same order. The sequence grows longer each round, so stay sharp to climb to higher levels."
+    },
+    "mini-chess": {
+      "title": "How to Play Mini Chess",
+      "body": "Play a streamlined version of chess. Click a piece to select it, then choose a valid destination square. Capture the enemy king before yours is trapped to win."
+    },
+    "math-quiz": {
+      "title": "How to Play Math Quiz",
+      "body": "Solve the math problems quickly and accurately. Enter your answer and submit it. Correct answers add to your score, while mistakes subtract points, so aim for speed and precision."
+    },
+    "color-match": {
+      "title": "How to Play Color Match",
+      "body": "A color name appears on screen—tap the button that matches it. Stay focused and answer quickly. You have {time} seconds to rack up the best score you can."
+    },
+    "number-pyramid": {
+      "title": "How to Play Number Pyramid",
+      "body": "Complete the pyramid by filling in the missing numbers. Each tile equals the sum of the two tiles directly beneath it. Use logic to finish the puzzle efficiently."
+    },
+    "daily-mission": {
+      "title": "How to Play Daily Mission",
+      "body": "Check in each day for a new task. Complete the mission goals to earn points and track your streak. Missions range from score targets to special gameplay objectives."
+    },
+    "speed-typing": {
+      "title": "How to Play Speed Typing",
+      "body": "Type the displayed text as fast and accurately as possible within {time} seconds. Your words per minute and accuracy combine to produce your final score."
+    },
+    "hangman-game": {
+      "title": "How to Play Hangman",
+      "body": "Guess the hidden word one letter at a time. Each wrong guess adds a piece to the hangman. You can make up to {maxGuesses} mistakes before the game ends, so choose carefully."
+    }
+  }
+}
