@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "build:pages": "next build",
-    "start": "next start",
+    "dev": "node --require ./scripts/register-lightningcss-stub.cjs node_modules/next/dist/bin/next dev",
+    "build": "node --require ./scripts/register-lightningcss-stub.cjs node_modules/next/dist/bin/next build",
+    "build:pages": "node --require ./scripts/register-lightningcss-stub.cjs node_modules/next/dist/bin/next build",
+    "start": "node --require ./scripts/register-lightningcss-stub.cjs node_modules/next/dist/bin/next start",
     "lint": "eslint"
   },
   "dependencies": {
@@ -29,5 +29,11 @@
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "lightningcss-wasm32-wasi": "file:stubs/lightningcss-wasm32-wasi"
+  },
+  "overrides": {
+    "lightningcss-wasm32-wasi": "file:stubs/lightningcss-wasm32-wasi"
   }
 }
