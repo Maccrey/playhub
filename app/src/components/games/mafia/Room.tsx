@@ -9,7 +9,11 @@ import {
   addGameLog,
   assignMafiaRoles,
   updateMafiaRoomStatus,
-  updatePlayerStatus
+  updatePlayerStatus,
+  MafiaRoomStatus,
+  addMafiaDiscussionMessage,
+  listenToMafiaDiscussionMessages,
+  MafiaDiscussionMessage
 } from '@/lib/firestore';
 
 interface Player {
@@ -20,9 +24,11 @@ interface Player {
 
 interface RoomData {
   hostId: string;
+  name?: string;
   players: Record<string, Player>;
-  status: string;
+  status: MafiaRoomStatus;
   votes?: Record<string, string>;
+  createdAt?: number;
 }
 
 type MafiaRoomProps = {
@@ -36,7 +42,11 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   const [timer, setTimer] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const [myVote, setMyVote] = useState<string | null>(null);
+  const [discussionInput, setDiscussionInput] = useState('');
+  const [discussionError, setDiscussionError] = useState<string | null>(null);
+  const [discussionMessages, setDiscussionMessages] = useState<Array<MafiaDiscussionMessage & {id: string}>>([]);
   const t = useTranslations('Mafia');
+  const MESSAGE_MAX_LENGTH = 200;
 
   useEffect(() => {
     if (!roomId) {
@@ -69,6 +79,38 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
     };
   }, [roomId, timerActive]);
 
+  useEffect(() => {
+    if (!roomId) {
+      return;
+    }
+
+    const unsubscribe = listenToMafiaDiscussionMessages(roomId, (data) => {
+      if (!data) {
+        setDiscussionMessages([]);
+        return;
+      }
+
+      const parsed = Object.entries(data)
+        .map(([id, message]) => ({
+          id,
+          ...message
+        }))
+        .sort((a, b) => {
+          const timeA = typeof a.timestamp === 'number' ? a.timestamp : 0;
+          const timeB = typeof b.timestamp === 'number' ? b.timestamp : 0;
+          return timeA - timeB;
+        });
+
+      setDiscussionMessages(parsed);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, [roomId]);
+
   const handleStartGame = useCallback(async () => {
     if (user && roomData && user.uid === roomData.hostId && roomId) {
       const playerIds = Object.keys(roomData.players);
@@ -84,7 +126,7 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       setMyVote(votedPlayerId);
       const roomRef = ref(db, `mafiaRooms/${roomId}/votes`);
       await update(roomRef, {[user.uid]: votedPlayerId});
-      const voterName = user.displayName || t('room.anonymous');
+      const voterName = user.displayName || t('anonymous');
       const targetName = roomData.players[votedPlayerId].displayName;
       addGameLog(roomId, t('room.logs.playerVoted', {voter: voterName, target: targetName}));
     },
@@ -192,6 +234,52 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
     [t]
   );
 
+  const roomStatus = roomData?.status ?? null;
+  const isDiscussionPhase = roomStatus === 'playing' || roomStatus === 'discussion';
+  const canSendDiscussionMessage = Boolean(user && roomId && isDiscussionPhase);
+
+  const handleDiscussionSubmit = useCallback(
+    async (event?: React.FormEvent) => {
+      if (event) {
+        event.preventDefault();
+      }
+
+      if (!roomId) {
+        return;
+      }
+
+      if (!user) {
+        window.alert(t('alerts.loginRequiredJoin'));
+        return;
+      }
+
+      if (!isDiscussionPhase) {
+        setDiscussionError(t('room.discussion.unavailable'));
+        return;
+      }
+
+      const trimmed = discussionInput.trim();
+      if (trimmed.length === 0) {
+        setDiscussionError(t('room.discussion.empty'));
+        return;
+      }
+
+      if (trimmed.length > MESSAGE_MAX_LENGTH) {
+        setDiscussionError(t('room.discussion.tooLong', {max: MESSAGE_MAX_LENGTH}));
+        return;
+      }
+
+      const displayName = user.displayName || t('anonymous');
+      const success = await addMafiaDiscussionMessage(roomId, user.uid, displayName, trimmed);
+
+      if (success) {
+        setDiscussionInput('');
+        setDiscussionError(null);
+      }
+    },
+    [roomId, user, isDiscussionPhase, discussionInput, MESSAGE_MAX_LENGTH, t]
+  );
+
   if (!roomId) {
     return <div className="text-center mt-8 text-red-500">{t('room.invalid')}</div>;
   }
@@ -206,11 +294,23 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
 
   const alivePlayers = playersArray.filter((player) => player.isAlive);
   const isHost = user && user.uid === roomData.hostId;
+  const roomTitle = roomData.name?.trim() ? roomData.name.trim() : t('room.label', {roomId});
+  const roomCodeLabel = t('room.codeLabel', {roomId});
+  const roomStatusLabels: Record<MafiaRoomStatus, string> = {
+    waiting: t('room.statusLabels.waiting'),
+    playing: t('room.statusLabels.playing'),
+    discussion: t('room.statusLabels.discussion'),
+    voting: t('room.statusLabels.voting'),
+    ended: t('room.statusLabels.ended')
+  };
+  const statusLabel = roomStatusLabels[roomData.status];
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-center text-gray-900">{t('room.label', {roomId})}</h1>
+        <h1 className="text-3xl font-bold text-center text-gray-900">{roomTitle}</h1>
+        <p className="text-sm text-center text-gray-500">{roomCodeLabel}</p>
+        <p className="text-sm text-center text-gray-500">{statusLabel}</p>
         {roomData.status === 'playing' && (
           <div className="text-2xl font-bold text-center text-red-600">{t('room.discussionTimer', {seconds: timer})}</div>
         )}
@@ -265,6 +365,70 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
         {roomData.status === 'voting' && (
           <p className="text-center text-gray-700">{t('room.votingInfo')}</p>
         )}
+
+        <div className="space-y-3">
+          <h3 className="text-lg font-semibold text-gray-900">{t('room.discussion.title')}</h3>
+          <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-md p-3 bg-gray-50">
+            {discussionMessages.length === 0 ? (
+              <p className="text-sm text-gray-500">{t('room.discussion.noMessages')}</p>
+            ) : (
+              <ul className="space-y-2">
+                {discussionMessages.map((message) => {
+                  const timestampLabel =
+                    typeof message.timestamp === 'number'
+                      ? new Date(message.timestamp).toLocaleTimeString()
+                      : '';
+                  return (
+                    <li key={message.id} className="bg-white border border-gray-200 rounded-md px-3 py-2 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-900">{message.authorName}</span>
+                        {timestampLabel && <span className="text-xs text-gray-400">{timestampLabel}</span>}
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">{message.message}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+          {user && (
+            <form className="space-y-2" onSubmit={handleDiscussionSubmit}>
+              <textarea
+                value={discussionInput}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setDiscussionInput(value);
+                  if (discussionError && value.trim().length <= MESSAGE_MAX_LENGTH) {
+                    setDiscussionError(null);
+                  }
+                }}
+                placeholder={t('room.discussion.placeholder')}
+                className="w-full resize-y rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                maxLength={MESSAGE_MAX_LENGTH}
+                rows={3}
+                disabled={!canSendDiscussionMessage}
+              />
+              {discussionError && <p className="text-sm text-red-500">{discussionError}</p>}
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-gray-500">
+                  {discussionInput.trim().length}/{MESSAGE_MAX_LENGTH}
+                </span>
+                <button
+                  type="submit"
+                  disabled={!canSendDiscussionMessage}
+                  className={`px-4 py-2 text-sm font-semibold rounded-md text-white ${
+                    canSendDiscussionMessage ? 'bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500' : 'bg-gray-400'
+                  }`}
+                >
+                  {t('room.discussion.send')}
+                </button>
+              </div>
+              {!canSendDiscussionMessage && (
+                <p className="text-xs text-gray-500">{t('room.discussion.unavailable')}</p>
+              )}
+            </form>
+          )}
+        </div>
 
         {roomData.status === 'ended' && (
           <div className="text-center">

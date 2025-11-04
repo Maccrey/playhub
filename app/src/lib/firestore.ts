@@ -99,17 +99,36 @@ export const getGlobalRanking = async (gameId: string) => {
   }
 };
 
-import { ref, set, get, update, push, serverTimestamp as dbServerTimestamp } from "firebase/database";
+import { ref, set, get, update, push, serverTimestamp as dbServerTimestamp, onValue, off } from "firebase/database";
 import { db } from "./firebase";
 
-export const createMafiaRoom = async (hostId: string) => {
+export type MafiaRoomStatus = 'waiting' | 'playing' | 'discussion' | 'voting' | 'ended';
+
+export type MafiaRoomPlayer = {
+  displayName: string;
+  role?: string;
+  isAlive?: boolean;
+};
+
+export type MafiaRoomData = {
+  hostId: string;
+  name: string;
+  status: MafiaRoomStatus;
+  createdAt?: number;
+  players: Record<string, MafiaRoomPlayer>;
+  votes?: Record<string, string>;
+};
+
+export const createMafiaRoom = async (hostId: string, name: string) => {
   if (!ensureFirebase('createMafiaRoom')) return null;
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase(); // Generate a random 6-character room ID
   const roomRef = ref(db, `mafiaRooms/${roomId}`);
+  const trimmedName = name.trim();
   
   try {
     await set(roomRef, {
       hostId,
+      name: trimmedName,
       createdAt: dbServerTimestamp(),
       players: {},
       status: 'waiting',
@@ -148,7 +167,18 @@ export const joinMafiaRoom = async (roomId: string, userId: string, displayName:
   }
 };
 
-export const updateMafiaRoomStatus = async (roomId: string, status: string) => {
+export const listenToMafiaRooms = (
+  callback: (rooms: Record<string, MafiaRoomData> | null) => void
+) => {
+  if (!ensureFirebase('listenToMafiaRooms')) return () => undefined;
+  const roomsRef = ref(db, 'mafiaRooms');
+  const listener = onValue(roomsRef, (snapshot) => {
+    callback(snapshot.val() as Record<string, MafiaRoomData> | null);
+  });
+  return () => off(roomsRef, 'value', listener);
+};
+
+export const updateMafiaRoomStatus = async (roomId: string, status: MafiaRoomStatus) => {
   if (!ensureFirebase('updateMafiaRoomStatus')) return false;
   const roomRef = ref(db, `mafiaRooms/${roomId}`);
   try {
@@ -158,6 +188,47 @@ export const updateMafiaRoomStatus = async (roomId: string, status: string) => {
     console.error("Error updating mafia room status", error);
     return false;
   }
+};
+
+export type MafiaDiscussionMessage = {
+  authorId: string;
+  authorName: string;
+  message: string;
+  timestamp?: number;
+};
+
+export const addMafiaDiscussionMessage = async (
+  roomId: string,
+  authorId: string,
+  authorName: string,
+  message: string
+) => {
+  if (!ensureFirebase('addMafiaDiscussionMessage')) return false;
+  const messagesRef = ref(db, `mafiaRooms/${roomId}/discussionMessages`);
+  try {
+    await push(messagesRef, {
+      authorId,
+      authorName,
+      message,
+      timestamp: dbServerTimestamp()
+    });
+    return true;
+  } catch (error) {
+    console.error('Error adding mafia discussion message', error);
+    return false;
+  }
+};
+
+export const listenToMafiaDiscussionMessages = (
+  roomId: string,
+  callback: (messages: Record<string, MafiaDiscussionMessage> | null) => void
+) => {
+  if (!ensureFirebase('listenToMafiaDiscussionMessages')) return () => undefined;
+  const messagesRef = ref(db, `mafiaRooms/${roomId}/discussionMessages`);
+  const listener = onValue(messagesRef, (snapshot) => {
+    callback(snapshot.val() as Record<string, MafiaDiscussionMessage> | null);
+  });
+  return () => off(messagesRef, 'value', listener);
 };
 
 export const assignMafiaRoles = async (roomId: string, playerIds: string[]) => {

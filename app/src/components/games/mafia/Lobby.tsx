@@ -1,27 +1,49 @@
 
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {usePathname, useRouter} from '@/navigation';
-import {createMafiaRoom, joinMafiaRoom} from '@/lib/firestore';
+import {createMafiaRoom, joinMafiaRoom, listenToMafiaRooms, MafiaRoomStatus} from '@/lib/firestore';
 import useUserStore from '@/store/userStore';
 
 const Lobby = () => {
+  type RoomSummary = {
+    id: string;
+    name: string;
+    status: MafiaRoomStatus;
+    playerCount: number;
+    createdAt: number;
+  };
+
+  const [roomName, setRoomName] = useState('');
   const [roomCode, setRoomCode] = useState('');
+  const [rooms, setRooms] = useState<RoomSummary[]>([]);
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useUserStore();
   const t = useTranslations('Mafia');
+  const lobbyStatusLabels: Record<MafiaRoomStatus, string> = {
+    waiting: t('lobby.status.waiting'),
+    playing: t('lobby.status.playing'),
+    discussion: t('lobby.status.discussion'),
+    voting: t('lobby.status.voting'),
+    ended: t('lobby.status.ended')
+  };
 
   const handleCreateRoom = async () => {
     if (!user) {
       window.alert(t('alerts.loginRequiredCreate'));
       return;
     }
-    const newRoomId = await createMafiaRoom(user.uid);
+    if (roomName.trim() === '') {
+      window.alert(t('alerts.enterRoomName'));
+      return;
+    }
+    const newRoomId = await createMafiaRoom(user.uid, roomName);
     if (newRoomId) {
       window.alert(t('alerts.roomCreated', {code: newRoomId}));
+      setRoomName('');
       router.push(`${pathname}?room=${newRoomId}`);
     }
   };
@@ -38,21 +60,86 @@ const Lobby = () => {
     }
 
     const displayName = user.displayName || t('anonymous');
-    const success = await joinMafiaRoom(roomCode, user.uid, displayName);
+    const normalizedCode = roomCode.trim().toUpperCase();
+    const success = await joinMafiaRoom(normalizedCode, user.uid, displayName);
     if (success) {
-      router.push(`${pathname}?room=${roomCode}`);
+      router.push(`${pathname}?room=${normalizedCode}`);
     } else {
       window.alert(t('alerts.joinFailed'));
     }
   };
 
+  useEffect(() => {
+    const unsubscribe = listenToMafiaRooms((data) => {
+      if (!data) {
+        setRooms([]);
+        return;
+      }
+
+      const parsed = Object.entries(data)
+        .map(([id, room]) => {
+          const players = room?.players ? Object.keys(room.players).length : 0;
+          const createdAtValue = typeof room?.createdAt === 'number' ? room.createdAt : 0;
+          const statusValue = (room?.status ?? 'waiting') as MafiaRoomStatus;
+          return {
+            id,
+            name: room?.name?.trim() || id,
+            status: statusValue,
+            playerCount: players,
+            createdAt: createdAtValue
+          };
+        })
+        .filter((room) => room.status === 'waiting')
+        .sort((a, b) => b.createdAt - a.createdAt);
+
+      setRooms(parsed);
+    });
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
+  }, []);
+
+  const handleJoinExistingRoom = async (roomId: string) => {
+    if (!user) {
+      window.alert(t('alerts.loginRequiredJoin'));
+      return;
+    }
+
+    const displayName = user.displayName || t('anonymous');
+    const success = await joinMafiaRoom(roomId, user.uid, displayName);
+    if (success) {
+      router.push(`${pathname}?room=${roomId}`);
+    } else {
+      window.alert(t('alerts.joinFailed'));
+    }
+  };
+
+  const noRoomsAvailable = rooms.length === 0;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-center text-gray-900">{t('title')}</h1>
-        
+
         <div className="space-y-4">
-          <button 
+          <div>
+            <label htmlFor="roomName" className="block text-sm font-medium text-gray-700">
+              {t('lobby.roomNameLabel')}
+            </label>
+            <input
+              id="roomName"
+              type="text"
+              value={roomName}
+              onChange={(e) => setRoomName(e.target.value)}
+              placeholder={t('lobby.roomNamePlaceholder')}
+              className="w-full px-4 py-2 mt-1 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              maxLength={32}
+            />
+          </div>
+          <button
             onClick={handleCreateRoom}
             className="w-full px-4 py-2 text-lg font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
@@ -86,6 +173,32 @@ const Lobby = () => {
             {t('joinRoom')}
           </button>
         </form>
+
+        <div className="space-y-3">
+          <h2 className="text-xl font-semibold text-gray-900">{t('lobby.roomsListTitle')}</h2>
+          {noRoomsAvailable ? (
+            <p className="text-gray-500 text-sm">{t('lobby.noRooms')}</p>
+          ) : (
+            <ul className="space-y-3">
+              {rooms.map((room) => (
+                <li key={room.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleJoinExistingRoom(room.id)}
+                    className="w-full flex flex-col items-start gap-1 px-4 py-3 text-left border border-gray-200 rounded-md hover:border-blue-500 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <span className="text-lg font-semibold text-gray-900">{room.name}</span>
+                      <span className="text-sm text-gray-500">{lobbyStatusLabels[room.status]}</span>
+                    </div>
+                    <span className="text-sm text-gray-600">{t('lobby.playersCount', {count: room.playerCount})}</span>
+                    <span className="text-xs text-gray-400">{t('room.codeLabel', {roomId: room.id})}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -142,17 +142,34 @@
       "loginRequiredJoin": "加入房间前请先登录。",
       "roomCreated": "房间已创建，代码：{code}",
       "enterRoomCode": "请输入房间代码。",
+      "enterRoomName": "请输入房间名称。",
       "joinFailed": "加入房间失败。请检查房间代码或稍后重试。",
       "playerEliminated": "{name} 被淘汰了！",
       "citizensWin": "市民胜利！所有黑手党已被找出。",
       "mafiaWin": "黑手党胜利！黑手党人数已与市民持平或超出。",
       "tie": "票数相同，没有人被淘汰！"
     },
+    "lobby": {
+      "roomNameLabel": "房间名称",
+      "roomNamePlaceholder": "输入房间名称",
+      "roomsListTitle": "开放中的房间",
+      "noRooms": "目前没有开放的房间。",
+      "playersCount": "玩家：{count}人",
+      "status": {
+        "waiting": "等待中",
+        "playing": "游戏进行中",
+        "discussion": "讨论阶段",
+        "voting": "投票阶段",
+        "ended": "已结束"
+      },
+      "join": "加入"
+    },
     "room": {
       "invalid": "房间 ID 无效或缺失。",
       "loading": "正在加载房间...",
       "notFound": "找不到房间，或房间已结束。",
       "label": "房间：{roomId}",
+      "codeLabel": "房间代码：{roomId}",
       "discussionTimer": "讨论剩余时间：{seconds}秒",
       "votingTimer": "投票剩余时间：{seconds}秒",
       "playersHeading": "玩家（存活 {count} 人）：",
@@ -167,6 +184,13 @@
       "votingInfo": "正在投票阶段。请选择要淘汰的玩家，得票最多者将被淘汰。",
       "endedTitle": "游戏已结束。",
       "endedDescription": "可以返回大厅开始新游戏。",
+      "statusLabels": {
+        "waiting": "等待中",
+        "playing": "游戏进行中",
+        "discussion": "讨论阶段",
+        "voting": "投票阶段",
+        "ended": "已结束"
+      },
       "logs": {
         "gameStarted": "游戏开始，身份已分配。",
         "playerVoted": "{voter} 投票给了 {target}。",
@@ -177,6 +201,15 @@
         "votingEnded": "投票结束，正在统计票数。",
         "tie": "票数相同，没有人被淘汰。",
         "discussionNext": "进入下一轮讨论阶段。"
+      },
+      "discussion": {
+        "title": "讨论区",
+        "placeholder": "写下你的推理或假情报...",
+        "send": "发送",
+        "empty": "请输入要发送的内容。",
+        "tooLong": "消息过长，最多允许 {max} 个字符。",
+        "unavailable": "仅在讨论阶段开放聊天功能。",
+        "noMessages": "还没有讨论消息，快来发表第一条吧！"
       }
     }
   },

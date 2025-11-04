@@ -1,6 +1,6 @@
 'use client';
 
-import {useState, useCallback, useEffect} from 'react';
+import {useState, useCallback} from 'react';
 import {useTranslations} from 'next-intl';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
@@ -78,12 +78,6 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
   const handleShowInstructions = () => {
     setShowInstructions((prev) => !prev);
   };
-
-  useEffect(() => {
-    if (attempts === 0 && attemptHistory.length === 0 && !gameOver) {
-      setMessage(translations('initial'));
-    }
-  }, [translations, attempts, attemptHistory.length, gameOver]);
 
   return (
     <div className="flex flex-col items-center">

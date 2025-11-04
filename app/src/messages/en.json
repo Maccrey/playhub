@@ -142,17 +142,34 @@
       "loginRequiredJoin": "You must be logged in to join a room.",
       "roomCreated": "Room created with code: {code}",
       "enterRoomCode": "Please enter a room code.",
+      "enterRoomName": "Please enter a room name.",
       "joinFailed": "Failed to join room. Please check the room code or try again.",
       "playerEliminated": "{name} has been eliminated!",
       "citizensWin": "Citizens win! All Mafia eliminated.",
       "mafiaWin": "Mafia win! Mafia outnumber or equal citizens.",
       "tie": "No one was eliminated due to a tie!"
     },
+    "lobby": {
+      "roomNameLabel": "Room Name",
+      "roomNamePlaceholder": "Enter Room Name",
+      "roomsListTitle": "Open Rooms",
+      "noRooms": "No rooms available right now.",
+      "playersCount": "Players: {count}",
+      "status": {
+        "waiting": "Waiting",
+        "playing": "Playing",
+        "discussion": "Discussion",
+        "voting": "Voting",
+        "ended": "Ended"
+      },
+      "join": "Join"
+    },
     "room": {
       "invalid": "Invalid or missing room id.",
       "loading": "Loading room...",
       "notFound": "Room not found or has ended.",
       "label": "Room: {roomId}",
+      "codeLabel": "Room code: {roomId}",
       "discussionTimer": "Discussion Time Left: {seconds}s",
       "votingTimer": "Voting Time Left: {seconds}s",
       "playersHeading": "Players ({count} alive):",
@@ -167,6 +184,13 @@
       "votingInfo": "Voting phase is active. Select a player to vote out. Highest votes will be eliminated.",
       "endedTitle": "Game has ended.",
       "endedDescription": "You can return to the lobby to start a new game.",
+      "statusLabels": {
+        "waiting": "Waiting",
+        "playing": "Playing",
+        "discussion": "Discussion",
+        "voting": "Voting",
+        "ended": "Ended"
+      },
       "logs": {
         "gameStarted": "Game started. Roles assigned.",
         "playerVoted": "{voter} voted for {target}.",
@@ -177,6 +201,15 @@
         "votingEnded": "Voting time ended. Tallying votes.",
         "tie": "No one was eliminated due to a tie.",
         "discussionNext": "Moving to next discussion phase."
+      },
+      "discussion": {
+        "title": "Discussion",
+        "placeholder": "Share your thoughts...",
+        "send": "Send",
+        "empty": "Please enter a message before sending.",
+        "tooLong": "Message is too long. Maximum {max} characters.",
+        "unavailable": "Chat is only available during the discussion phase.",
+        "noMessages": "No discussion messages yet. Start the conversation!"
       }
     }
   },
