@@ -2,7 +2,6 @@
 import { Link } from '@/navigation';
 import useUserStore from '@/store/userStore';
 import { toggleFavoriteGame } from '@/lib/firestore';
-import { motion } from 'framer-motion';
 
 interface GameCardProps {
   game: {
@@ -31,10 +30,8 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
   };
 
   return (
-    <motion.div 
-      className="relative"
-      whileHover={{ scale: 1.05 }}
-      transition={{ type: "spring", stiffness: 400, damping: 10 }}
+    <div 
+      className="relative transition-transform duration-200 ease-out hover:scale-105"
     >
       <Link href={game.path}>
         <div className="bg-white rounded-lg shadow-md p-4 text-center hover:shadow-lg transition-shadow duration-300">
@@ -47,7 +44,7 @@ const GameCard: React.FC<GameCardProps> = ({ game }) => {
       >
         ⭐
       </button>
-    </motion.div>
+    </div>
   );
 };
 
