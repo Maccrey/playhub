@@ -129,5 +129,14 @@
       "title": "猜单词玩法",
       "body": "逐个猜测单词中的字母。每次猜错都会增加吊人图的一部分。最多允许 {maxGuesses} 次错误，留意选择。"
     }
+  },
+  "GuessTheNumber": {
+    "initial": "请猜 1 到 100 之间的数字。",
+    "invalid": "请输入 1 到 100 之间的数字。",
+    "tooLow": "{guess} 太小了，再猜大一点！（第 {attempt} 次）",
+    "tooHigh": "{guess} 太大了，再猜小一点！（第 {attempt} 次）",
+    "correct": "{guess} 正确！你用了 {attempt} 次就猜中了。",
+    "historyTitle": "历史猜测",
+    "historyEntry": "第 {attempt} 次：{guess}"
   }
 }

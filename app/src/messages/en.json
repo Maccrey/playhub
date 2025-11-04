@@ -129,5 +129,14 @@
       "title": "How to Play Hangman",
       "body": "Guess the hidden word one letter at a time. Each wrong guess adds a piece to the hangman. You can make up to {maxGuesses} mistakes before the game ends, so choose carefully."
     }
+  },
+  "GuessTheNumber": {
+    "initial": "Guess a number between 1 and 100",
+    "invalid": "Please enter a number between 1 and 100.",
+    "tooLow": "{guess} is too low. Guess higher! (Attempt {attempt})",
+    "tooHigh": "{guess} is too high. Guess lower! (Attempt {attempt})",
+    "correct": "{guess} is correct! You got it in {attempt} attempts.",
+    "historyTitle": "Previous guesses",
+    "historyEntry": "#{attempt}: {guess}"
   }
 }

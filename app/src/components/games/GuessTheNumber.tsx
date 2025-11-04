@@ -1,20 +1,21 @@
 'use client';
 
-import {useState, useCallback} from 'react';
+import {useState, useCallback, useEffect} from 'react';
+import {useTranslations} from 'next-intl';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
 import {updateUserHighScore} from '@/lib/firestore';
 
 const INSTRUCTION_KEY = 'guess-the-number';
-const INITIAL_MESSAGE = 'Guess a number between 1 and 100';
 
 const createTargetNumber = () => Math.floor(Math.random() * 100) + 1;
 
 const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const translations = useTranslations('GuessTheNumber');
   const [targetNumber, setTargetNumber] = useState(createTargetNumber);
   const [guess, setGuess] = useState('');
-  const [message, setMessage] = useState(INITIAL_MESSAGE);
+  const [message, setMessage] = useState(() => translations('initial'));
   const [attempts, setAttempts] = useState(0);
   const [attemptHistory, setAttemptHistory] = useState<number[]>([]);
   const [gameOver, setGameOver] = useState(false);
@@ -24,11 +25,11 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
   const resetGame = useCallback(() => {
     setTargetNumber(createTargetNumber());
     setGuess('');
-    setMessage(INITIAL_MESSAGE);
+    setMessage(translations('initial'));
     setAttempts(0);
     setAttemptHistory([]);
     setGameOver(false);
-  }, []);
+  }, [translations]);
 
   const handleGuess = (event: React.FormEvent) => {
     event.preventDefault();
@@ -36,7 +37,7 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
 
     const numericGuess = Number(guess);
     if (!Number.isFinite(numericGuess) || numericGuess <= 0 || numericGuess > 100) {
-      setMessage('Please enter a number between 1 and 100.');
+      setMessage(translations('invalid'));
       return;
     }
 
@@ -45,14 +46,14 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
     setAttemptHistory((prev) => [...prev, numericGuess]);
 
     if (numericGuess === targetNumber) {
-      setMessage(`${numericGuess} is correct! You got it in ${attemptCount} attempts.`);
+      setMessage(translations('correct', {guess: numericGuess, attempt: attemptCount}));
       setGameOver(true);
       const score = Math.max(0, 100 - attemptCount);
       onGameEnd(score);
     } else if (numericGuess < targetNumber) {
-      setMessage(`${numericGuess} is too low. Guess higher! (Attempt ${attemptCount})`);
+      setMessage(translations('tooLow', {guess: numericGuess, attempt: attemptCount}));
     } else {
-      setMessage(`${numericGuess} is too high. Guess lower! (Attempt ${attemptCount})`);
+      setMessage(translations('tooHigh', {guess: numericGuess, attempt: attemptCount}));
     }
 
     setGuess('');
@@ -78,6 +79,12 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
     setShowInstructions((prev) => !prev);
   };
 
+  useEffect(() => {
+    if (attempts === 0 && attemptHistory.length === 0 && !gameOver) {
+      setMessage(translations('initial'));
+    }
+  }, [translations, attempts, attemptHistory.length, gameOver]);
+
   return (
     <div className="flex flex-col items-center">
       <GameToolbar
@@ -93,14 +100,14 @@ const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
       <div className="text-xl mb-4" aria-live="polite">{message}</div>
       {attemptHistory.length > 0 && (
         <div className="w-full max-w-sm mb-4 text-sm text-gray-600">
-          <div className="font-semibold">Previous guesses</div>
+          <div className="font-semibold">{translations('historyTitle')}</div>
           <ul className="mt-2 flex flex-wrap gap-2">
             {attemptHistory.map((value, index) => (
               <li
                 key={`${value}-${index}`}
                 className="px-2 py-1 rounded bg-gray-200 text-gray-800"
               >
-                #{index + 1}: {value}
+                {translations('historyEntry', {attempt: index + 1, guess: value})}
               </li>
             ))}
           </ul>

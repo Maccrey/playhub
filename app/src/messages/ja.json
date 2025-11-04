@@ -129,5 +129,14 @@
       "title": "ハングマンの遊び方",
       "body": "単語に使われている文字を1つずつ推測します。間違えるたびにハングマンの絵が描かれていきます。ミスは最大{maxGuesses}回までなので慎重に選びましょう。"
     }
+  },
+  "GuessTheNumber": {
+    "initial": "1から100の数字を当ててください。",
+    "invalid": "1から100の範囲で入力してください。",
+    "tooLow": "{guess}は小さすぎます。もっと大きな数字を試しましょう！（{attempt}回目）",
+    "tooHigh": "{guess}は大きすぎます。もっと小さな数字を試しましょう！（{attempt}回目）",
+    "correct": "{guess}で正解！ {attempt}回目で当てました。",
+    "historyTitle": "これまでの推測",
+    "historyEntry": "{attempt}回目: {guess}"
   }
 }

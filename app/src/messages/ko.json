@@ -129,5 +129,14 @@
       "title": "행맨 플레이 방법",
       "body": "단어를 이루는 글자를 하나씩 추측하세요. 틀릴 때마다 행맨 그림이 완성됩니다. 최대 {maxGuesses}번까지 실수할 수 있으니 신중하게 선택하세요."
     }
+  },
+  "GuessTheNumber": {
+    "initial": "1부터 100 사이의 숫자를 맞춰 보세요.",
+    "invalid": "1부터 100 사이의 숫자를 입력해 주세요.",
+    "tooLow": "{guess}은(는) 너무 낮아요. 더 큰 숫자를 시도해 보세요! (시도 {attempt}회)",
+    "tooHigh": "{guess}은(는) 너무 높아요. 더 작은 숫자를 시도해 보세요! (시도 {attempt}회)",
+    "correct": "{guess}을(를) 맞췄어요! {attempt}번 만에 정답입니다.",
+    "historyTitle": "이전 추측",
+    "historyEntry": "{attempt}번째: {guess}"
   }
 }
