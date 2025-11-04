@@ -1,9 +1,11 @@
+import type {Timestamp} from 'firebase/firestore';
+
 export interface User {
   uid: string;
   displayName: string | null;
   email: string | null;
   photoURL: string | null;
-  createdAt: any; // Firebase Timestamp
+  createdAt: Timestamp | null;
   favoriteGames: string[];
   highScores: { [gameId: string]: number };
   sentRequests: string[];

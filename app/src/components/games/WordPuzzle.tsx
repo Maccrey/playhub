@@ -1,88 +1,94 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useState, useCallback} from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
-import { updateUserHighScore } from '@/lib/firestore';
+import {updateUserHighScore} from '@/lib/firestore';
 
 const words = [
-  { scrambled: 'ELPPA', answer: 'APPLE' },
-  { scrambled: 'LEMON', answer: 'MELON' },
-  { scrambled: 'GRAPE', answer: 'PEAR' },
-  { scrambled: 'ANANAB', answer: 'BANANA' },
-  { scrambled: 'ERRYB', answer: 'BERRY' },
+  {scrambled: 'ELPPA', answer: 'APPLE'},
+  {scrambled: 'LEMON', answer: 'MELON'},
+  {scrambled: 'GRAPE', answer: 'PEAR'},
+  {scrambled: 'ANANAB', answer: 'BANANA'},
+  {scrambled: 'ERRYB', answer: 'BERRY'},
 ];
 
 const INSTRUCTION_KEY = 'word-puzzle';
 
-const WordPuzzle = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [currentWord, setCurrentWord] = useState<{ scrambled: string; answer: string } | null>(null);
-  const [shuffledLetters, setShuffledLetters] = useState<string[]>([]);
+const shuffleLetters = (value: string) => value.split('').sort(() => Math.random() - 0.5);
+
+type WordEntry = (typeof words)[number];
+
+const WordPuzzle = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const initialWord: WordEntry | null = words[0] ?? null;
+  const [wordIndex, setWordIndex] = useState(0);
+  const [currentWord, setCurrentWord] = useState<WordEntry | null>(initialWord);
+  const [shuffledLetters, setShuffledLetters] = useState<string[]>(() =>
+    initialWord ? shuffleLetters(initialWord.scrambled) : []
+  );
   const [selectedLetters, setSelectedLetters] = useState<string[]>([]);
   const [message, setMessage] = useState('');
   const [score, setScore] = useState(0);
-  const [wordIndex, setWordIndex] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { user } = useUserStore();
+  const {user} = useUserStore();
 
-  const initializeGame = () => {
-    setWordIndex(0);
-    setScore(0);
-    setMessage('');
-    loadNewWord(0);
-  };
+  const loadNewWord = useCallback(
+    (index: number, finalScore: number) => {
+      if (index >= words.length) {
+        setCurrentWord(null);
+        setShuffledLetters([]);
+        setSelectedLetters([]);
+        setMessage('Game Over! All words guessed.');
+        onGameEnd(finalScore);
+        return;
+      }
 
-  const loadNewWord = (index: number) => {
-    if (index >= words.length) {
-      setMessage('Game Over! All words guessed.');
-      setCurrentWord(null);
-      setShuffledLetters([]);
-      onGameEnd(score);
-      return;
-    }
-    const word = words[index];
-    setCurrentWord(word);
-    setShuffledLetters(word.scrambled.split('').sort(() => Math.random() - 0.5));
-    setSelectedLetters([]);
-    setMessage('');
-  };
-
-  useEffect(() => {
-    initializeGame();
-  }, []);
+      const word = words[index];
+      setCurrentWord(word);
+      setShuffledLetters(shuffleLetters(word.scrambled));
+      setSelectedLetters([]);
+      setMessage('');
+    },
+    [onGameEnd]
+  );
 
   const handleLetterClick = (letter: string, index: number) => {
-    setSelectedLetters(prev => [...prev, letter]);
-    setShuffledLetters(prev => prev.filter((_, i) => i !== index));
+    setSelectedLetters((prev) => [...prev, letter]);
+    setShuffledLetters((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleClear = () => {
     if (currentWord) {
-      setShuffledLetters(currentWord.scrambled.split('').sort(() => Math.random() - 0.5));
+      setShuffledLetters(shuffleLetters(currentWord.scrambled));
       setSelectedLetters([]);
     }
   };
 
   const handleSubmit = () => {
     if (!currentWord) return;
+
     const guessedWord = selectedLetters.join('');
     if (guessedWord === currentWord.answer) {
       setMessage('Correct!');
-      setScore(score + 10);
-      setTimeout(() => loadNewWord(wordIndex + 1), 1000);
-      setWordIndex(wordIndex + 1);
+      const nextScore = score + 10;
+      const nextIndex = wordIndex + 1;
+      setScore(nextScore);
+      setWordIndex(nextIndex);
+      setTimeout(() => loadNewWord(nextIndex, nextScore), 1000);
     } else {
       setMessage('Incorrect. Try again.');
-      setScore(Math.max(0, score - 5));
+      setScore((prevScore) => Math.max(0, prevScore - 5));
       handleClear();
     }
   };
 
-  const handleRestart = () => {
-    initializeGame();
-  };
+  const handleRestart = useCallback(() => {
+    setWordIndex(0);
+    setScore(0);
+    loadNewWord(0, 0);
+  }, [loadNewWord]);
 
   const handleSaveScore = () => {
     if (user) {
@@ -94,14 +100,14 @@ const WordPuzzle = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   };
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <GameToolbar 
-        onRestart={handleRestart} 
-        onSaveScore={handleSaveScore} 
+      <GameToolbar
+        onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
         onShowInstructions={handleShowInstructions}
       />
       <GameInstructionsModal
@@ -115,7 +121,10 @@ const WordPuzzle = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
           <h2 className="text-2xl font-bold mb-4">Unscramble the word:</h2>
           <div className="flex justify-center space-x-2 mb-4">
             {selectedLetters.map((letter, index) => (
-              <span key={index} className="w-10 h-10 bg-blue-200 flex items-center justify-center text-xl font-bold rounded-md">
+              <span
+                key={index}
+                className="w-10 h-10 bg-blue-200 flex items-center justify-center text-xl font-bold rounded-md"
+              >
                 {letter}
               </span>
             ))}
@@ -123,7 +132,7 @@ const WordPuzzle = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
           <div className="flex justify-center space-x-2 mb-4">
             {shuffledLetters.map((letter, index) => (
               <button
-                key={index}
+                key={`${letter}-${index}`}
                 onClick={() => handleLetterClick(letter, index)}
                 className="w-10 h-10 bg-gray-200 flex items-center justify-center text-xl font-bold rounded-md hover:bg-gray-300"
               >
@@ -132,8 +141,12 @@ const WordPuzzle = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
             ))}
           </div>
           <div className="flex justify-center space-x-4">
-            <button onClick={handleSubmit} className="px-4 py-2 bg-green-500 text-white rounded-md">Submit</button>
-            <button onClick={handleClear} className="px-4 py-2 bg-red-500 text-white rounded-md">Clear</button>
+            <button onClick={handleSubmit} className="px-4 py-2 bg-green-500 text-white rounded-md">
+              Submit
+            </button>
+            <button onClick={handleClear} className="px-4 py-2 bg-red-500 text-white rounded-md">
+              Clear
+            </button>
           </div>
         </div>
       )}

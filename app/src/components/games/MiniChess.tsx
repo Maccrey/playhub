@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
@@ -33,7 +33,7 @@ const MiniChess = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   const { user } = useUserStore();
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
   // Simplified move validation (very basic, just for UI interaction)

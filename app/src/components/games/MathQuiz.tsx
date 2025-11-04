@@ -1,49 +1,53 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useState} from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
-import { updateUserHighScore } from '@/lib/firestore';
+import {updateUserHighScore} from '@/lib/firestore';
 
 const INSTRUCTION_KEY = 'math-quiz';
 
-const MathQuiz = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [number1, setNumber1] = useState(0);
-  const [number2, setNumber2] = useState(0);
-  const [operator, setOperator] = useState('+');
+type Operator = '+' | '-' | '*' | '/';
+
+interface MathQuestion {
+  number1: number;
+  number2: number;
+  operator: Operator;
+}
+
+const createMathQuestion = (): MathQuestion => {
+  const operators: Operator[] = ['+', '-', '*', '/'];
+  const operator = operators[Math.floor(Math.random() * operators.length)];
+  let number1 = Math.floor(Math.random() * 10) + 1;
+  const number2 = Math.floor(Math.random() * 10) + 1;
+
+  if (operator === '/') {
+    number1 = number1 * number2;
+  }
+
+  return {number1, number2, operator};
+};
+
+const MathQuiz = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const [question, setQuestion] = useState<MathQuestion>(createMathQuestion);
   const [answer, setAnswer] = useState('');
   const [message, setMessage] = useState('Solve the equation!');
   const [score, setScore] = useState(0);
-  const [gameOver, setGameOver] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { user } = useUserStore();
+  const {user} = useUserStore();
 
   const generateQuestion = () => {
-    const ops = ['+', '-', '*', '/'];
-    const newOp = ops[Math.floor(Math.random() * ops.length)];
-    let num1 = Math.floor(Math.random() * 10) + 1;
-    let num2 = Math.floor(Math.random() * 10) + 1;
-
-    // Ensure division results in whole numbers for simplicity
-    if (newOp === '/') {
-      num1 = num1 * num2; // Make num1 a multiple of num2
-    }
-
-    setNumber1(num1);
-    setNumber2(num2);
-    setOperator(newOp);
+    setQuestion(createMathQuestion());
     setAnswer('');
     setMessage('Solve the equation!');
   };
 
-  useEffect(() => {
-    generateQuestion();
-  }, []);
-
   const checkAnswer = () => {
-    let correctAnswer;
+    const {number1, number2, operator} = question;
+
+    let correctAnswer: number;
     switch (operator) {
       case '+':
         correctAnswer = number1 + number2;
@@ -61,19 +65,18 @@ const MathQuiz = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
         correctAnswer = 0;
     }
 
-    if (parseInt(answer) === correctAnswer) {
+    if (Number(answer) === correctAnswer) {
       setMessage('Correct!');
-      setScore(score + 1);
+      setScore((prevScore) => prevScore + 1);
       generateQuestion();
     } else {
       setMessage('Incorrect. Try again.');
-      setScore(Math.max(0, score - 1));
+      setScore((prevScore) => Math.max(0, prevScore - 1));
     }
   };
 
   const handleRestart = () => {
     setScore(0);
-    setGameOver(false);
     generateQuestion();
   };
 
@@ -88,14 +91,14 @@ const MathQuiz = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   };
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <GameToolbar 
-        onRestart={handleRestart} 
-        onSaveScore={handleSaveScore} 
+      <GameToolbar
+        onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
         onShowInstructions={handleShowInstructions}
       />
       <GameInstructionsModal
@@ -105,11 +108,11 @@ const MathQuiz = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
       />
       <div className="text-xl mb-4">Score: {score}</div>
       <div className="text-3xl font-bold mb-8">
-        {number1} {operator} {number2} = ?
+        {question.number1} {question.operator} {question.number2} = ?
       </div>
       <form
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={(event) => {
+          event.preventDefault();
           checkAnswer();
         }}
         className="flex space-x-2 mb-4"
@@ -117,7 +120,7 @@ const MathQuiz = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
         <input
           type="number"
           value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
+          onChange={(event) => setAnswer(event.target.value)}
           className="px-4 py-2 border rounded-md text-center text-xl"
           autoFocus
         />

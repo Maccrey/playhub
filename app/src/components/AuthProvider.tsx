@@ -24,7 +24,7 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             displayName: user.displayName,
             email: user.email,
             photoURL: user.photoURL,
-            createdAt: user.metadata.creationTime,
+            createdAt: userProfile.createdAt ?? null,
             favoriteGames: userProfile.favoriteGames || [],
             highScores: userProfile.highScores || {},
             sentRequests: userProfile.sentRequests || [],

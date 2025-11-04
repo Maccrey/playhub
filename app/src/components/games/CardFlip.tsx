@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
@@ -15,28 +15,27 @@ interface Card {
 
 const INSTRUCTION_KEY = 'card-flip';
 
+const createShuffledCards = (): Card[] => {
+  const symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+  return [...symbols, ...symbols]
+    .sort(() => Math.random() - 0.5)
+    .map((symbol, index) => ({id: index, symbol, isFlipped: false}));
+};
+
 const CardFlip = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [cards, setCards] = useState<Card[]>([]);
+  const [cards, setCards] = useState<Card[]>(createShuffledCards);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [solved, setSolved] = useState<number[]>([]);
   const [score, setScore] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const { user } = useUserStore();
 
-  const initializeGame = useCallback(() => {
-    const symbols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-    const gameCards = [...symbols, ...symbols]
-      .sort(() => Math.random() - 0.5)
-      .map((symbol, index) => ({ id: index, symbol, isFlipped: false }));
-    setCards(gameCards);
+  const resetGame = useCallback(() => {
+    setCards(createShuffledCards());
     setFlipped([]);
     setSolved([]);
     setScore(0);
   }, []);
-
-  useEffect(() => {
-    initializeGame();
-  }, [initializeGame]);
 
   const handleCardClick = (index: number) => {
     if (flipped.length === 2 || solved.includes(index) || flipped.includes(index)) return;
@@ -57,7 +56,7 @@ const CardFlip = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   };
 
   const handleRestart = () => {
-    initializeGame();
+    resetGame();
   };
 
   useEffect(() => {

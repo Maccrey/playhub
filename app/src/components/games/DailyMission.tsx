@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
@@ -16,21 +16,22 @@ const MISSIONS = [
 
 const INSTRUCTION_KEY = 'daily-mission';
 
+const computeDailyMission = () => {
+  const today = new Date().toDateString();
+  const missionIndex = today.charCodeAt(0) % MISSIONS.length;
+  return MISSIONS[missionIndex];
+};
+
 const DailyMission = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [currentMission, setCurrentMission] = useState<string | null>(null);
+  const [currentMission, setCurrentMission] = useState<string>(computeDailyMission);
   const [missionCompleted, setMissionCompleted] = useState(false);
   const [score, setScore] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const { user } = useUserStore();
 
-  useEffect(() => {
-    const getDailyMission = () => {
-      const today = new Date().toDateString();
-      const missionIndex = today.charCodeAt(0) % MISSIONS.length;
-      setCurrentMission(MISSIONS[missionIndex]);
-      setMissionCompleted(false);
-    };
-    getDailyMission();
+  const selectDailyMission = useCallback(() => {
+    setCurrentMission(computeDailyMission());
+    setMissionCompleted(false);
   }, []);
 
   const handleCompleteMission = () => {
@@ -42,7 +43,7 @@ const DailyMission = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => 
   };
 
   const handleRestart = () => {
-    getDailyMission();
+    selectDailyMission();
     setScore(0);
   };
 

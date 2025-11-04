@@ -1,23 +1,27 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useState} from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
-import { updateUserHighScore } from '@/lib/firestore';
+import {updateUserHighScore} from '@/lib/firestore';
 
 const INSTRUCTION_KEY = 'tictactoe';
 
-const TicTacToe = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [board, setBoard] = useState(Array(9).fill(null));
+type SquareValue = 'X' | 'O' | null;
+
+const createEmptyBoard = (): SquareValue[] => Array(9).fill(null);
+
+const TicTacToe = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const [board, setBoard] = useState<SquareValue[]>(createEmptyBoard);
   const [isXNext, setIsXNext] = useState(true);
   const [wins, setWins] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { user } = useUserStore();
+  const {user} = useUserStore();
 
   const handleRestart = () => {
-    setBoard(Array(9).fill(null));
+    setBoard(createEmptyBoard());
     setIsXNext(true);
   };
 
@@ -31,50 +35,44 @@ const TicTacToe = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   };
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
-  const handleClick = (i: number) => {
-    if (calculateWinner(board) || board[i]) {
+  const handleClick = (index: number) => {
+    if (calculateWinner(board) || board[index]) {
       return;
     }
+
     const newBoard = board.slice();
-    newBoard[i] = isXNext ? 'X' : 'O';
+    newBoard[index] = isXNext ? 'X' : 'O';
+    const nextWinner = calculateWinner(newBoard);
+
     setBoard(newBoard);
     setIsXNext(!isXNext);
+
+    if (nextWinner === 'X') {
+      setWins((currentWins) => currentWins + 1);
+      onGameEnd(1);
+    }
   };
 
   const winner = calculateWinner(board);
-  useEffect(() => {
-    if (winner === 'X') {
-      setWins(wins + 1);
-      onGameEnd(1);
-    }
-  }, [winner]);
+  const status = winner ? `Winner: ${winner}` : `Next player: ${isXNext ? 'X' : 'O'}`;
 
-  let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
-    status = 'Next player: ' + (isXNext ? 'X' : 'O');
-  };
-
-  const renderSquare = (i: number) => {
-    return (
-      <button 
-        className="w-20 h-20 bg-white border border-gray-400 text-3xl font-bold"
-        onClick={() => handleClick(i)}
-      >
-        {board[i]}
-      </button>
-    );
-  };
+  const renderSquare = (index: number) => (
+    <button
+      className="w-20 h-20 bg-white border border-gray-400 text-3xl font-bold"
+      onClick={() => handleClick(index)}
+    >
+      {board[index]}
+    </button>
+  );
 
   return (
     <div className="flex flex-col items-center">
-      <GameToolbar 
-        onRestart={handleRestart} 
-        onSaveScore={handleSaveScore} 
+      <GameToolbar
+        onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
         onShowInstructions={handleShowInstructions}
       />
       <GameInstructionsModal
@@ -103,7 +101,7 @@ const TicTacToe = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   );
 };
 
-function calculateWinner(squares: any[]) {
+function calculateWinner(squares: SquareValue[]): SquareValue {
   const lines = [
     [0, 1, 2],
     [3, 4, 5],
@@ -114,8 +112,7 @@ function calculateWinner(squares: any[]) {
     [0, 4, 8],
     [2, 4, 6],
   ];
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
+  for (const [a, b, c] of lines) {
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
       return squares[a];
     }

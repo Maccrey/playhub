@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
@@ -12,8 +12,10 @@ const MAX_GUESSES = 6;
 
 const INSTRUCTION_KEY = 'hangman-game';
 
+const pickRandomWord = () => WORDS[Math.floor(Math.random() * WORDS.length)];
+
 const HangmanGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [wordToGuess, setWordToGuess] = useState('');
+  const [wordToGuess, setWordToGuess] = useState(() => pickRandomWord());
   const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
   const [wrongGuesses, setWrongGuesses] = useState(0);
   const [message, setMessage] = useState('');
@@ -22,19 +24,14 @@ const HangmanGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   const [showInstructions, setShowInstructions] = useState(false);
   const { user } = useUserStore();
 
-  const initializeGame = useCallback(() => {
-    const randomIndex = Math.floor(Math.random() * WORDS.length);
-    setWordToGuess(WORDS[randomIndex]);
+  const resetGame = useCallback(() => {
+    setWordToGuess(pickRandomWord());
     setGuessedLetters([]);
     setWrongGuesses(0);
     setMessage('');
     setScore(0);
     setGameOver(false);
   }, []);
-
-  useEffect(() => {
-    initializeGame();
-  }, [initializeGame]);
 
   const handleGuess = (letter: string) => {
     if (gameOver || guessedLetters.includes(letter)) return;
@@ -69,7 +66,7 @@ const HangmanGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
     .join(' ');
 
   const handleRestart = () => {
-    initializeGame();
+    resetGame();
   };
 
   const handleSaveScore = () => {

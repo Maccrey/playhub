@@ -159,19 +159,23 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
         addGameLog(roomId, 'Discussion time ended. Moving to voting phase.');
       } else if (roomData?.status === 'voting') {
         tallyVotesAndEliminatePlayer();
-        addGameLog(roomId, 'Voting time ended. Tallying votes.');
+        if (roomId) {
+          addGameLog(roomId, 'Voting time ended. Tallying votes.');
+        }
       }
     }
   }, [timer, timerActive, roomData?.status, roomId, tallyVotesAndEliminatePlayer]);
 
+  const playersSource = roomData?.players ?? null;
+
   const playersArray = useMemo(() => {
-    if (!roomData?.players) return [];
-    return Object.entries(roomData.players).map(([id, player]) => ({
+    if (!playersSource) return [];
+    return Object.entries(playersSource).map(([id, player]) => ({
       id,
       ...player,
       isAlive: player.isAlive !== false
     }));
-  }, [roomData?.players]);
+  }, [playersSource]);
 
   if (!roomId) {
     return <div className="text-center mt-8 text-red-500">Invalid or missing room id.</div>;

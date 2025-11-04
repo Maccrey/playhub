@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
@@ -38,7 +38,7 @@ const SnakeGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
     directionRef.current = nextDirection;
   };
 
-  const generateFood = (currentSnake: SnakeSegment[] = snakeRef.current) => {
+  const generateFood = useCallback((currentSnake: SnakeSegment[] = snakeRef.current) => {
     let newFood: SnakeSegment;
     do {
       newFood = {
@@ -48,33 +48,9 @@ const SnakeGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
     } while (currentSnake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
     setFood(newFood);
     foodRef.current = newFood;
-  };
-
-  const initializeGame = () => {
-    const initialSnake = createInitialSnake();
-    setSnake(initialSnake);
-    snakeRef.current = initialSnake;
-    setDirectionSafely('RIGHT');
-    setGameOver(false);
-    setScore(0);
-    scoreRef.current = 0;
-    generateFood(initialSnake);
-    if (gameIntervalRef.current) {
-      clearInterval(gameIntervalRef.current);
-    }
-    gameIntervalRef.current = setInterval(moveSnake, GAME_SPEED);
-  };
-
-  useEffect(() => {
-    initializeGame();
-    return () => {
-      if (gameIntervalRef.current) {
-        clearInterval(gameIntervalRef.current);
-      }
-    };
   }, []);
 
-  const moveSnake = () => {
+  const moveSnake = useCallback(() => {
     setSnake(prevSnake => {
       const head = { ...prevSnake[0] };
       const currentDirection = directionRef.current;
@@ -134,9 +110,33 @@ const SnakeGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
       snakeRef.current = nextSnake;
       return nextSnake;
     });
-  };
+  }, [generateFood, onGameEnd]);
 
-  const changeDirection = (e: KeyboardEvent) => {
+  const initializeGame = useCallback(() => {
+    const initialSnake = createInitialSnake();
+    setSnake(initialSnake);
+    snakeRef.current = initialSnake;
+    setDirectionSafely('RIGHT');
+    setGameOver(false);
+    setScore(0);
+    scoreRef.current = 0;
+    generateFood(initialSnake);
+    if (gameIntervalRef.current) {
+      clearInterval(gameIntervalRef.current);
+    }
+    gameIntervalRef.current = setInterval(moveSnake, GAME_SPEED);
+  }, [generateFood, moveSnake]);
+
+  useEffect(() => {
+    initializeGame();
+    return () => {
+      if (gameIntervalRef.current) {
+        clearInterval(gameIntervalRef.current);
+      }
+    };
+  }, [initializeGame]);
+
+  const changeDirection = useCallback((e: KeyboardEvent) => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       e.preventDefault();
     }
@@ -155,14 +155,14 @@ const SnakeGame = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
         if (currentDirection !== 'LEFT') setDirectionSafely('RIGHT');
         break;
     }
-  };
+  }, []);
 
   useEffect(() => {
     document.addEventListener('keydown', changeDirection, { passive: false });
     return () => {
       document.removeEventListener('keydown', changeDirection);
     };
-  }, []);
+  }, [changeDirection]);
 
   const handleRestart = () => {
     initializeGame();

@@ -1,66 +1,67 @@
+'use client';
 
-
-import { useState, useEffect } from 'react';
+import {useState, useCallback} from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
-import { updateUserHighScore } from '@/lib/firestore';
+import {updateUserHighScore} from '@/lib/firestore';
 
 const INSTRUCTION_KEY = 'guess-the-number';
+const INITIAL_MESSAGE = 'Guess a number between 1 and 100';
 
-const GuessTheNumber = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [targetNumber, setTargetNumber] = useState(0);
+const createTargetNumber = () => Math.floor(Math.random() * 100) + 1;
+
+const GuessTheNumber = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const [targetNumber, setTargetNumber] = useState(createTargetNumber);
   const [guess, setGuess] = useState('');
-  const [message, setMessage] = useState('Guess a number between 1 and 100');
+  const [message, setMessage] = useState(INITIAL_MESSAGE);
   const [attempts, setAttempts] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { user } = useUserStore();
+  const {user} = useUserStore();
 
-  useEffect(() => {
-    const initializeGame = () => {
-      setTargetNumber(Math.floor(Math.random() * 100) + 1);
-      setGuess('');
-      setMessage('Guess a number between 1 and 100');
-      setAttempts(0);
-      setGameOver(false);
-    };
-    initializeGame();
+  const resetGame = useCallback(() => {
+    setTargetNumber(createTargetNumber());
+    setGuess('');
+    setMessage(INITIAL_MESSAGE);
+    setAttempts(0);
+    setGameOver(false);
   }, []);
 
-  const handleGuess = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGuess = (event: React.FormEvent) => {
+    event.preventDefault();
     if (gameOver) return;
 
-    const numGuess = parseInt(guess, 10);
-    if (isNaN(numGuess)) {
+    const numericGuess = Number(guess);
+    if (!Number.isFinite(numericGuess) || numericGuess <= 0) {
       setMessage('Please enter a valid number');
       return;
     }
 
-    setAttempts(attempts + 1);
+    const attemptCount = attempts + 1;
+    setAttempts(attemptCount);
 
-    if (numGuess === targetNumber) {
-      setMessage(`You got it in ${attempts + 1} attempts!`);
+    if (numericGuess === targetNumber) {
+      setMessage(`You got it in ${attemptCount} attempts!`);
       setGameOver(true);
-      const score = 100 - (attempts + 1);
+      const score = Math.max(0, 100 - attemptCount);
       onGameEnd(score);
-    } else if (numGuess < targetNumber) {
+    } else if (numericGuess < targetNumber) {
       setMessage('Too low!');
     } else {
       setMessage('Too high!');
     }
+
     setGuess('');
   };
 
   const handleRestart = () => {
-    initializeGame();
+    resetGame();
   };
 
   const handleSaveScore = () => {
     if (user && gameOver) {
-      // Lower attempts is a better score
-      const score = 100 - attempts;
+      const score = Math.max(0, 100 - attempts);
       updateUserHighScore(user.uid, 'guess-the-number', score);
       alert('Score saved!');
     } else if (!user) {
@@ -71,14 +72,14 @@ const GuessTheNumber = ({ onGameEnd }: { onGameEnd: (score: number) => void }) =
   };
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <GameToolbar 
-        onRestart={handleRestart} 
-        onSaveScore={handleSaveScore} 
+      <GameToolbar
+        onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
         onShowInstructions={handleShowInstructions}
       />
       <GameInstructionsModal
@@ -89,14 +90,16 @@ const GuessTheNumber = ({ onGameEnd }: { onGameEnd: (score: number) => void }) =
       <div className="text-xl mb-4">{message}</div>
       {!gameOver && (
         <form onSubmit={handleGuess} className="flex space-x-2">
-          <input 
+          <input
             type="number"
             value={guess}
-            onChange={(e) => setGuess(e.target.value)}
+            onChange={(event) => setGuess(event.target.value)}
             className="px-4 py-2 border rounded-md"
             autoFocus
           />
-          <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded-md">Guess</button>
+          <button type="submit" className="px-4 py-2 text-white bg-blue-600 rounded-md">
+            Guess
+          </button>
         </form>
       )}
     </div>

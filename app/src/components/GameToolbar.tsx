@@ -31,7 +31,9 @@ const GameToolbar: React.FC<GameToolbarProps> = ({
 
   if (!resolvedTitle && gameMeta) {
     try {
-      resolvedTitle = gameTranslations(gameMeta.translationKey as any);
+      resolvedTitle = gameTranslations(
+        gameMeta.translationKey as Parameters<typeof gameTranslations>[0]
+      );
     } catch {
       resolvedTitle = gameMeta.id;
     }

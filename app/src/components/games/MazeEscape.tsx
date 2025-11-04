@@ -1,83 +1,97 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
-import { updateUserHighScore } from '@/lib/firestore';
+import {updateUserHighScore} from '@/lib/firestore';
 
 const INSTRUCTION_KEY = 'maze-escape';
 
-const MazeEscape = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [maze, setMaze] = useState<string[][]>([]);
-  const [playerPosition, setPlayerPosition] = useState({ x: 1, y: 1 });
-  const [startTime, setStartTime] = useState(0);
+const baseMazeLayout: string[][] = [
+  ['W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W'],
+  ['W', 'P', ' ', ' ', 'W', ' ', ' ', ' ', ' ', 'W'],
+  ['W', 'W', 'W', ' ', 'W', ' ', 'W', 'W', ' ', 'W'],
+  ['W', ' ', ' ', ' ', ' ', ' ', 'W', ' ', ' ', 'W'],
+  ['W', ' ', 'W', 'W', 'W', 'W', 'W', ' ', 'W', 'W'],
+  ['W', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'W'],
+  ['W', 'W', 'W', 'W', 'W', ' ', 'W', 'W', 'W', 'W'],
+  ['W', ' ', ' ', ' ', 'W', ' ', ' ', ' ', 'E', 'W'],
+  ['W', ' ', 'W', ' ', ' ', ' ', 'W', ' ', ' ', 'W'],
+  ['W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W'],
+];
+
+interface Position {
+  x: number;
+  y: number;
+}
+
+const START_POSITION: Position = {x: 1, y: 1};
+
+const createMaze = () => baseMazeLayout.map((row) => [...row]);
+
+const MazeEscape = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const [maze, setMaze] = useState<string[][]>(createMaze);
+  const [playerPosition, setPlayerPosition] = useState<Position>({...START_POSITION});
+  const [startTime, setStartTime] = useState(() => Date.now());
   const [gameOver, setGameOver] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { user } = useUserStore();
+  const {user} = useUserStore();
 
-  const generateMaze = () => {
-    // Simple 10x10 maze
-    const newMaze = [
-      ['W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W'],
-      ['W', 'P', ' ', ' ', 'W', ' ', ' ', ' ', ' ', 'W'],
-      ['W', 'W', 'W', ' ', 'W', ' ', 'W', 'W', ' ', 'W'],
-      ['W', ' ', ' ', ' ', ' ', ' ', 'W', ' ', ' ', 'W'],
-      ['W', ' ', 'W', 'W', 'W', 'W', 'W', ' ', 'W', 'W'],
-      ['W', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', 'W'],
-      ['W', 'W', 'W', 'W', 'W', ' ', 'W', 'W', 'W', 'W'],
-      ['W', ' ', ' ', ' ', 'W', ' ', ' ', ' ', 'E', 'W'],
-      ['W', ' ', 'W', ' ', ' ', ' ', 'W', ' ', ' ', 'W'],
-      ['W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W', 'W'],
-    ];
-    setMaze(newMaze);
-    setPlayerPosition({ x: 1, y: 1 });
+  const resetGame = useCallback(() => {
+    setMaze(createMaze());
+    setPlayerPosition({...START_POSITION});
     setStartTime(Date.now());
     setGameOver(false);
-  };
-
-  useEffect(() => {
-    generateMaze();
   }, []);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (gameOver) return;
-    const { x, y } = playerPosition;
-    let newX = x, newY = y;
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (gameOver) return;
 
-    if (e.key === 'ArrowUp') newY--;
-    if (e.key === 'ArrowDown') newY++;
-    if (e.key === 'ArrowLeft') newX--;
-    if (e.key === 'ArrowRight') newX++;
+      const {x, y} = playerPosition;
+      let newX = x;
+      let newY = y;
 
-    if (maze[newY] && maze[newY][newX] && maze[newY][newX] !== 'W') {
-      setPlayerPosition({ x: newX, y: newY });
-      if (maze[newY][newX] === 'E') {
-        setGameOver(true);
-        const timeTaken = (Date.now() - startTime) / 1000;
-        const score = Math.max(0, 1000 - Math.floor(timeTaken));
-        onGameEnd(score);
-        alert(`You escaped in ${timeTaken.toFixed(2)} seconds!`);
+      if (event.key === 'ArrowUp') newY -= 1;
+      if (event.key === 'ArrowDown') newY += 1;
+      if (event.key === 'ArrowLeft') newX -= 1;
+      if (event.key === 'ArrowRight') newX += 1;
+
+      const tile = maze[newY]?.[newX];
+      if (!tile || tile === 'W') {
+        return;
       }
-    }
-  };
+
+      setPlayerPosition({x: newX, y: newY});
+
+      if (tile === 'E') {
+        setGameOver(true);
+        const timeTakenSeconds = (Date.now() - startTime) / 1000;
+        const score = Math.max(0, 1000 - Math.floor(timeTakenSeconds));
+        onGameEnd(score);
+        alert(`You escaped in ${timeTakenSeconds.toFixed(2)} seconds!`);
+      }
+    },
+    [gameOver, maze, onGameEnd, playerPosition, startTime]
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [playerPosition, gameOver]);
+  }, [handleKeyDown]);
 
   const handleRestart = () => {
-    generateMaze();
+    resetGame();
   };
 
   const handleSaveScore = () => {
     if (user && gameOver) {
       const timeTaken = (Date.now() - startTime) / 1000;
-      const score = Math.max(0, 1000 - Math.floor(timeTaken)); // Higher score for faster time
+      const score = Math.max(0, 1000 - Math.floor(timeTaken));
       updateUserHighScore(user.uid, 'maze-escape', score);
       alert('Score saved!');
     } else if (!user) {
@@ -88,14 +102,14 @@ const MazeEscape = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   };
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <GameToolbar 
-        onRestart={handleRestart} 
-        onSaveScore={handleSaveScore} 
+      <GameToolbar
+        onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
         onShowInstructions={handleShowInstructions}
       />
       <GameInstructionsModal
@@ -104,13 +118,17 @@ const MazeEscape = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
         onClose={handleShowInstructions}
       />
       <div className="grid grid-cols-10 gap-0.5 bg-black p-1">
-        {maze.map((row, y) => 
-          row.map((cell, x) => (
-            <div 
-              key={`${y}-${x}`}
+        {maze.map((row, rowIndex) =>
+          row.map((cell, columnIndex) => (
+            <div
+              key={`${rowIndex}-${columnIndex}`}
               className={`w-8 h-8 flex items-center justify-center ${cell === 'W' ? 'bg-gray-800' : 'bg-white'}`}
             >
-              {y === playerPosition.y && x === playerPosition.x ? 'P' : (cell === 'E' ? 'E' : '')}
+              {rowIndex === playerPosition.y && columnIndex === playerPosition.x
+                ? 'P'
+                : cell === 'E'
+                  ? 'E'
+                  : ''}
             </div>
           ))
         )}

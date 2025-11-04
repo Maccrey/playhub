@@ -7,7 +7,9 @@ import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
 import { updateUserHighScore } from '@/lib/firestore';
 
-const choices = ['rock', 'paper', 'scissors'];
+const choices = ['rock', 'paper', 'scissors'] as const;
+const pickRandomChoice = (items: readonly string[]) =>
+  items[Math.floor(Math.random() * items.length)];
 const INSTRUCTION_KEY = 'rock-paper-scissors';
 
 const RockPaperScissors = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
@@ -20,8 +22,7 @@ const RockPaperScissors = ({ onGameEnd }: { onGameEnd: (score: number) => void }
 
   const handlePlay = (choice: string) => {
     setPlayerChoice(choice);
-    const randomIndex = Math.floor(Math.random() * choices.length);
-    const compChoice = choices[randomIndex];
+    const compChoice = pickRandomChoice(choices);
     setComputerChoice(compChoice);
     determineWinner(choice, compChoice);
   };

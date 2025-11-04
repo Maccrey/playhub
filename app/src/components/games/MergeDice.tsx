@@ -1,54 +1,52 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useState, useCallback} from 'react';
 import GameToolbar from '@/components/GameToolbar';
 import GameInstructionsModal from '@/components/GameInstructionsModal';
 import useUserStore from '@/store/userStore';
-import { updateUserHighScore } from '@/lib/firestore';
+import {updateUserHighScore} from '@/lib/firestore';
 
 const INSTRUCTION_KEY = 'merge-dice';
 
-const MergeDice = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
-  const [board, setBoard] = useState<(number | null)[]>(Array(25).fill(null));
-  const [nextDice, setNextDice] = useState(1);
+const createEmptyBoard = () => Array<(number | null)>(25).fill(null);
+const rollDie = () => Math.floor(Math.random() * 6) + 1;
+
+const MergeDice = ({onGameEnd}: {onGameEnd: (score: number) => void}) => {
+  const [board, setBoard] = useState<(number | null)[]>(createEmptyBoard);
+  const [nextDice, setNextDice] = useState(() => rollDie());
   const [score, setScore] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
-  const { user } = useUserStore();
+  const {user} = useUserStore();
 
-  const generateNextDice = () => {
-    setNextDice(Math.floor(Math.random() * 6) + 1);
-  };
+  const generateNextDice = useCallback(() => {
+    setNextDice(rollDie());
+  }, []);
 
-  const initializeGame = () => {
-    setBoard(Array(25).fill(null));
+  const resetGame = useCallback(() => {
+    setBoard(createEmptyBoard());
     setScore(0);
-    generateNextDice();
-  };
-
-  useEffect(() => {
-    initializeGame();
+    setNextDice(rollDie());
   }, []);
 
   const handleCellClick = (index: number) => {
-    if (board[index] !== null) return; // Cell is already occupied
+    if (board[index] !== null) return;
 
     const newBoard = [...board];
     newBoard[index] = nextDice;
     const newScore = score + nextDice;
+
     setBoard(newBoard);
     setScore(newScore);
     generateNextDice();
 
-    const isBoardFull = newBoard.every(cell => cell !== null);
-    if (isBoardFull) {
+    if (newBoard.every((cell) => cell !== null)) {
       onGameEnd(newScore);
     }
-    // TODO: Implement merge logic
   };
 
   const handleRestart = () => {
-    initializeGame();
+    resetGame();
   };
 
   const handleSaveScore = () => {
@@ -61,14 +59,14 @@ const MergeDice = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
   };
 
   const handleShowInstructions = () => {
-    setShowInstructions(!showInstructions);
+    setShowInstructions((prev) => !prev);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <GameToolbar 
-        onRestart={handleRestart} 
-        onSaveScore={handleSaveScore} 
+      <GameToolbar
+        onRestart={handleRestart}
+        onSaveScore={handleSaveScore}
         onShowInstructions={handleShowInstructions}
       />
       <GameInstructionsModal
@@ -80,7 +78,7 @@ const MergeDice = ({ onGameEnd }: { onGameEnd: (score: number) => void }) => {
       <div className="text-xl mb-4">Next Dice: {nextDice}</div>
       <div className="grid grid-cols-5 gap-1 bg-gray-300 p-1">
         {board.map((cell, index) => (
-          <div 
+          <div
             key={index}
             onClick={() => handleCellClick(index)}
             className="w-16 h-16 bg-white flex items-center justify-center text-2xl font-bold cursor-pointer"

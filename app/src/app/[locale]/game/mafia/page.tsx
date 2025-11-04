@@ -1,20 +1,28 @@
 
+'use client';
+
+import {Suspense} from 'react';
+import {useSearchParams} from 'next/navigation';
 import Lobby from '@/components/games/mafia/Lobby';
 import MafiaRoom from '@/components/games/mafia/Room';
 
-type PageProps = {
-  searchParams: Record<string, string | string[] | undefined>;
-};
-
-const MafiaPage = ({searchParams}: PageProps) => {
-  const rawRoom = searchParams.room ?? searchParams.roomId;
-  const roomId = Array.isArray(rawRoom) ? rawRoom[0] : rawRoom;
+const MafiaPageContent = () => {
+  const params = useSearchParams();
+  const roomId = params?.get('room') ?? params?.get('roomId') ?? undefined;
 
   if (roomId) {
     return <MafiaRoom roomId={roomId} />;
   }
 
   return <Lobby />;
+};
+
+const MafiaPage = () => {
+  return (
+    <Suspense fallback={<Lobby />}>
+      <MafiaPageContent />
+    </Suspense>
+  );
 };
 
 export default MafiaPage;

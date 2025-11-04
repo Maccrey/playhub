@@ -1,18 +1,17 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import useUserStore from '@/store/userStore';
-import { 
-  getFriends, 
-  getSentRequests, 
-  getReceivedRequests, 
-  sendFriendRequest, 
-  acceptFriendRequest, 
-  rejectFriendRequest, 
-  getUserProfileDocument 
+import {
+  getFriends,
+  getSentRequests,
+  getReceivedRequests,
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest
 } from '@/lib/firestore';
 
 interface FriendData {
@@ -31,26 +30,35 @@ const ProfilePage = () => {
   const [searchResults, setSearchResults] = useState<FriendData[]>([]);
   const [loadingFriends, setLoadingFriends] = useState(true);
 
-  useEffect(() => {
-    const fetchFriendData = async () => {
-      if (user) {
-        setLoadingFriends(true);
-        const fetchedFriends = await getFriends(user.uid);
-        const fetchedSentRequests = await getSentRequests(user.uid);
-        const fetchedReceivedRequests = await getReceivedRequests(user.uid);
-        setFriends(fetchedFriends);
-        setSentRequests(fetchedSentRequests);
-        setReceivedRequests(fetchedReceivedRequests);
-        setLoadingFriends(false);
-      }
-    };
+  const fetchFriendData = useCallback(async () => {
+    if (!user) return;
 
+    setLoadingFriends(true);
+    const [fetchedFriends, fetchedSentRequests, fetchedReceivedRequests] = await Promise.all([
+      getFriends(user.uid),
+      getSentRequests(user.uid),
+      getReceivedRequests(user.uid)
+    ]);
+    setFriends(fetchedFriends);
+    setSentRequests(fetchedSentRequests);
+    setReceivedRequests(fetchedReceivedRequests);
+    setLoadingFriends(false);
+  }, [user]);
+
+  useEffect(() => {
     if (!user) {
       router.push('/login');
-    } else {
-      fetchFriendData();
+      return;
     }
-  }, [user, router]);
+
+    const timeoutId = setTimeout(() => {
+      void fetchFriendData();
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [user, router, fetchFriendData]);
 
   const handleSearch = async () => {
     if (searchQuery.trim() === '') {
@@ -76,7 +84,7 @@ const ProfilePage = () => {
       const success = await sendFriendRequest(user.uid, receiverUid, user.displayName || 'Anonymous');
       if (success) {
         alert(`Friend request sent to ${receiverDisplayName}`);
-        fetchFriendData();
+        void fetchFriendData();
       } else {
         alert('Failed to send friend request.');
       }
@@ -88,7 +96,7 @@ const ProfilePage = () => {
       const success = await acceptFriendRequest(user.uid, senderUid, user.displayName || 'Anonymous', senderDisplayName);
       if (success) {
         alert(`Accepted friend request from ${senderDisplayName}`);
-        fetchFriendData();
+        void fetchFriendData();
       } else {
         alert('Failed to accept friend request.');
       }
@@ -100,7 +108,7 @@ const ProfilePage = () => {
       const success = await rejectFriendRequest(user.uid, senderUid, senderDisplayName);
       if (success) {
         alert(`Rejected friend request from ${senderDisplayName}`);
-        fetchFriendData();
+        void fetchFriendData();
       } else {
         alert('Failed to reject friend request.');
       }

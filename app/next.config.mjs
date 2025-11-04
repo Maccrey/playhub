@@ -1,4 +1,6 @@
-const withNextIntl = require('next-intl/plugin')();
+import withNextIntl from 'next-intl/plugin';
+
+const withNextIntlPlugin = withNextIntl();
 
 const normalizeBasePath = (value) => {
   if (!value) return '';
@@ -34,4 +36,4 @@ const nextConfig = {
   assetPrefix: basePath || undefined,
 };
 
-module.exports = withNextIntl(nextConfig);
+export default withNextIntlPlugin(nextConfig);

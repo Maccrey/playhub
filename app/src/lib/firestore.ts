@@ -129,8 +129,8 @@ export const joinMafiaRoom = async (roomId: string, userId: string, displayName:
   if (roomSnapshot.exists()) {
     const roomData = roomSnapshot.val();
     if (roomData.status === 'waiting') {
-      const updates: { [key: string]: any } = {};
-      updates[`mafiaRooms/${roomId}/players/${userId}`] = { displayName };
+      const updates: Record<string, {displayName: string}> = {};
+      updates[`mafiaRooms/${roomId}/players/${userId}`] = {displayName};
       try {
         await update(ref(db), updates);
         return true;
