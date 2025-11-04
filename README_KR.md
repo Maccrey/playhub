@@ -132,24 +132,30 @@ Playwright E2E 테스트는 애플리케이션에 대해 실행되도록 구성�
 
 ## GitHub Pages 배포
 
-이 프로젝트는 `main` 브랜치에 푸시될 때 GitHub Actions를 통해 GitHub Pages에 자동으로 배포되도록 설정되어 있습니다.
+`main` 브랜치에 커밋이 푸시되면 `.github/workflows/deploy-pages.yml` 워크플로우가 실행되어 정적 사이트를 빌드하고 GitHub Pages로 배포합니다.
 
-### 설정 방법
+### 준비 사항
 
-1.  **GitHub 저장소 시크릿 설정:**
-    배포 시 Firebase 구성을 안전하게 사용하기 위해 GitHub 저장소에 시크릿을 설정해야 합니다. 다음 시크릿들을 `Settings > Secrets and variables > Actions` 에서 추가해주세요.
+1. **GitHub 저장소 시크릿 설정**  
+   Firebase 설정 값을 안전하게 주입하기 위해 아래 시크릿들을 `Settings > Secrets and variables > Actions` 에 추가하세요.
+   - `NEXT_PUBLIC_API_KEY`
+   - `NEXT_PUBLIC_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_PROJECT_ID`
+   - `NEXT_PUBLIC_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_APP_ID`
+   - `NEXT_PUBLIC_MEASUREMENT_ID`
 
-    *   `NEXT_PUBLIC_API_KEY`
-    *   `NEXT_PUBLIC_AUTH_DOMAIN`
-    *   `NEXT_PUBLIC_PROJECT_ID`
-    *   `NEXT_PUBLIC_STORAGE_BUCKET`
-    *   `NEXT_PUBLIC_MESSAGING_SENDER_ID`
-    *   `NEXT_PUBLIC_APP_ID`
-    *   `NEXT_PUBLIC_MEASUREMENT_ID`
+   모든 값은 Firebase 프로젝트의 웹 앱 설정에서 확인할 수 있습니다.
 
-    각 시크릿의 값은 Firebase 프로젝트의 웹 앱 구성에서 찾을 수 있습니다.
+2. **GitHub Pages 활성화**  
+   `Settings > Pages`로 이동해 Source를 “GitHub Actions”로 설정합니다. (최초 1회만 필요)
 
-2.  **배포 확인:**
-    `main` 브랜치에 변경 사항을 푸시하면, GitHub Actions 워크플로우가 자동으로 실행되어 프로젝트를 빌드하고 `gh-pages` 브랜치에 배포합니다. 배포 상태는 저장소의 `Actions` 탭에서 확인할 수 있습니다.
+### 배포 흐름
 
-    배포가 완료되면 `https://<YOUR_GITHUB_USERNAME>.github.io/playhub/` 에서 애플리케이션을 확인할 수 있습니다.
+1. `main` 브랜치로 푸시하면 GitHub Actions가 Next.js 정적 빌드를 생성합니다.
+2. 워크플로우가 `app/out` 디렉터리를 Pages 아티팩트로 업로드합니다.
+3. `Deploy to GitHub Pages` 단계가 실행되면 사이트가 `https://<USERNAME>.github.io/<REPOSITORY>/`에서 제공됩니다.  
+   사용자/조직 페이지 저장소(`<USERNAME>.github.io`)라면 기본 경로 없이 루트에서 서비스됩니다.
+
+필요한 경우 `Actions` 탭에서 워크플로우를 수동으로 실행해 재배포할 수 있습니다.

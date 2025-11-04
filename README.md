@@ -130,3 +130,32 @@ Playwright E2E tests are configured to run against the application. To run the t
     npx playwright test tests/e2e/auth.spec.ts
     ```
 
+## GitHub Pages Deployment
+
+Pushing to the `main` branch triggers the `.github/workflows/deploy-pages.yml` workflow, which builds the static site and deploys it to GitHub Pages.
+
+### Prerequisites
+
+1. **GitHub repository secrets**  
+   Add the following secrets under `Settings > Secrets and variables > Actions` so the workflow can inject your Firebase configuration during the build:
+   - `NEXT_PUBLIC_API_KEY`
+   - `NEXT_PUBLIC_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_PROJECT_ID`
+   - `NEXT_PUBLIC_STORAGE_BUCKET`
+   - `NEXT_PUBLIC_MESSAGING_SENDER_ID`
+   - `NEXT_PUBLIC_APP_ID`
+   - `NEXT_PUBLIC_MEASUREMENT_ID`
+
+   Retrieve the values from your Firebase web app settings.
+
+2. **Enable GitHub Pages**  
+   In `Settings > Pages`, set the source to “GitHub Actions” (one-time setup).
+
+### Deployment Flow
+
+1. Push to `main` to trigger the workflow.
+2. The workflow runs `npm run build:pages` inside `app`, producing a static build in `app/out`.
+3. `actions/deploy-pages` publishes the artifact.  
+   Project pages are available at `https://<USERNAME>.github.io/<REPOSITORY>/`, while user/org pages (`<USERNAME>.github.io`) are served from the root without an extra path segment.
+
+You can also run the workflow manually from the repository’s **Actions** tab to redeploy on demand.
