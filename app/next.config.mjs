@@ -36,6 +36,19 @@ const nextConfig = {
   },
   basePath: basePath || undefined,
   assetPrefix: basePath || undefined,
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'same-origin-allow-popups',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default withNextIntlPlugin(nextConfig);
