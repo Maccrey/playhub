@@ -117,13 +117,20 @@ export type MafiaRoomData = {
   createdAt?: number;
   players: Record<string, MafiaRoomPlayer>;
   votes?: Record<string, string>;
+  language?: string;
 };
 
-export const createMafiaRoom = async (hostId: string, name: string) => {
+const SUPPORTED_LANGUAGES = ['en', 'ko', 'ja', 'zh'] as const;
+type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number];
+
+export const createMafiaRoom = async (hostId: string, name: string, language: string) => {
   if (!ensureFirebase('createMafiaRoom')) return null;
   const roomId = Math.random().toString(36).substring(2, 8).toUpperCase(); // Generate a random 6-character room ID
   const roomRef = ref(db, `mafiaRooms/${roomId}`);
   const trimmedName = name.trim();
+  const normalizedLanguage = SUPPORTED_LANGUAGES.includes(language as SupportedLanguage)
+    ? language
+    : 'en';
   
   try {
     await set(roomRef, {
@@ -132,6 +139,7 @@ export const createMafiaRoom = async (hostId: string, name: string) => {
       createdAt: dbServerTimestamp(),
       players: {},
       status: 'waiting',
+      language: normalizedLanguage,
     });
     return roomId;
   } catch (error) {

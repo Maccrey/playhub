@@ -143,6 +143,7 @@
       "roomCreated": "部屋が作成されました: {code}",
       "enterRoomCode": "部屋コードを入力してください。",
       "enterRoomName": "部屋名を入力してください。",
+      "notEnoughPlayers": "ゲーム開始には最低3人が必要です。",
       "joinFailed": "部屋に参加できませんでした。コードを確認してもう一度お試しください。",
       "playerEliminated": "{name} が追放されました！",
       "citizensWin": "市民チームの勝利！マフィアをすべて見つけました。",
@@ -152,9 +153,19 @@
     "lobby": {
       "roomNameLabel": "部屋名",
       "roomNamePlaceholder": "部屋名を入力",
+      "languageLabel": "使用言語",
+      "languagePlaceholder": "言語を選択してください",
       "roomsListTitle": "公開中の部屋",
       "noRooms": "現在公開中の部屋はありません。",
       "playersCount": "プレイヤー: {count}人",
+      "languageTag": "使用言語: {language}",
+      "languages": {
+        "en": "英語",
+        "ko": "韓国語",
+        "ja": "日本語",
+        "zh": "中国語",
+        "unknown": "不明"
+      },
       "status": {
         "waiting": "待機中",
         "playing": "進行中",
@@ -177,6 +188,14 @@
       "roles": {
         "mafia": "マフィア",
         "citizen": "市民"
+      },
+      "languageLabel": "使用言語: {language}",
+      "languages": {
+        "en": "英語",
+        "ko": "韓国語",
+        "ja": "日本語",
+        "zh": "中国語",
+        "unknown": "不明"
       },
       "votePrompt": "追放するプレイヤーを選んでください:",
       "startGame": "ゲーム開始",

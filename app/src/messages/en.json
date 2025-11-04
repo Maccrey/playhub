@@ -143,6 +143,7 @@
       "roomCreated": "Room created with code: {code}",
       "enterRoomCode": "Please enter a room code.",
       "enterRoomName": "Please enter a room name.",
+      "notEnoughPlayers": "You need at least 3 players to start the game.",
       "joinFailed": "Failed to join room. Please check the room code or try again.",
       "playerEliminated": "{name} has been eliminated!",
       "citizensWin": "Citizens win! All Mafia eliminated.",
@@ -152,9 +153,19 @@
     "lobby": {
       "roomNameLabel": "Room Name",
       "roomNamePlaceholder": "Enter Room Name",
+      "languageLabel": "Language",
+      "languagePlaceholder": "Select language",
       "roomsListTitle": "Open Rooms",
       "noRooms": "No rooms available right now.",
       "playersCount": "Players: {count}",
+      "languageTag": "Language: {language}",
+      "languages": {
+        "en": "English",
+        "ko": "Korean",
+        "ja": "Japanese",
+        "zh": "Chinese",
+        "unknown": "Unknown"
+      },
       "status": {
         "waiting": "Waiting",
         "playing": "Playing",
@@ -177,6 +188,14 @@
       "roles": {
         "mafia": "mafia",
         "citizen": "citizen"
+      },
+      "languageLabel": "Language: {language}",
+      "languages": {
+        "en": "English",
+        "ko": "Korean",
+        "ja": "Japanese",
+        "zh": "Chinese",
+        "unknown": "Unknown"
       },
       "votePrompt": "Vote for someone to eliminate:",
       "startGame": "Start Game",

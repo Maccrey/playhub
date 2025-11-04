@@ -30,6 +30,7 @@ interface RoomData {
   status: MafiaRoomStatus;
   votes?: Record<string, string>;
   createdAt?: number;
+  language?: string;
 }
 
 type MafiaRoomProps = {
@@ -50,6 +51,7 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   const MESSAGE_MAX_LENGTH = 200;
   const discussionContainerRef = useRef<HTMLDivElement | null>(null);
   const previousStatusRef = useRef<MafiaRoomStatus | null>(null);
+  const discussionFormRef = useRef<HTMLFormElement | null>(null);
 
   useEffect(() => {
     if (!roomId) {
@@ -62,20 +64,23 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
       const data = snapshot.val() as RoomData | null;
       if (data) {
         setRoomData(data);
+
         const previousStatus = previousStatusRef.current;
         const nextStatus = data.status;
 
-        if (nextStatus === 'playing' && previousStatus !== 'playing') {
-          setTimer(60);
-          setTimerActive(true);
-        } else if (nextStatus === 'voting' && previousStatus !== 'voting') {
-          setTimer(30);
-          setTimerActive(true);
-        } else if (nextStatus !== 'playing' && nextStatus !== 'voting' && previousStatus !== nextStatus) {
-          setTimerActive(false);
-        }
+        if (nextStatus !== previousStatus) {
+          if (nextStatus === 'playing') {
+            setTimer(60);
+            setTimerActive(true);
+          } else if (nextStatus === 'voting') {
+            setTimer(30);
+            setTimerActive(true);
+          } else {
+            setTimerActive(false);
+          }
 
-        previousStatusRef.current = nextStatus;
+          previousStatusRef.current = nextStatus;
+        }
       } else {
         setRoomData(null);
         previousStatusRef.current = null;
@@ -130,7 +135,14 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
 
   const handleStartGame = useCallback(async () => {
     if (user && roomData && user.uid === roomData.hostId && roomId) {
-      const playerIds = Object.keys(roomData.players);
+      const playerIds = Object.keys(roomData.players || {});
+      if (playerIds.length < 3) {
+        window.alert(t('alerts.notEnoughPlayers'));
+        return;
+      }
+      if (roomData.status !== 'waiting') {
+        return;
+      }
       await assignMafiaRoles(roomId, playerIds);
       await updateMafiaRoomStatus(roomId, 'playing');
       addGameLog(roomId, t('room.logs.gameStarted'));
@@ -254,6 +266,14 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
   const roomStatus = roomData?.status ?? null;
   const isDiscussionPhase = roomStatus === 'playing' || roomStatus === 'discussion';
   const canSendDiscussionMessage = Boolean(user && roomId && isDiscussionPhase);
+  const supportedLanguages: Array<'en' | 'ko' | 'ja' | 'zh'> = ['en', 'ko', 'ja', 'zh'];
+  const roomLanguageDisplayMap: Record<'en' | 'ko' | 'ja' | 'zh' | 'unknown', string> = {
+    en: t('room.languages.en'),
+    ko: t('room.languages.ko'),
+    ja: t('room.languages.ja'),
+    zh: t('room.languages.zh'),
+    unknown: t('room.languages.unknown')
+  };
 
   useEffect(() => {
     if (!user || !roomId || !roomData) return;
@@ -330,12 +350,18 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
     ended: t('room.statusLabels.ended')
   };
   const statusLabel = roomStatusLabels[roomData.status];
+  const roomLanguageKey = roomData.language && supportedLanguages.includes(roomData.language as (typeof supportedLanguages)[number])
+    ? (roomData.language as (typeof supportedLanguages)[number])
+    : 'unknown';
+  const roomLanguageName = roomLanguageDisplayMap[roomLanguageKey] ?? roomLanguageDisplayMap.unknown;
+  const roomLanguageLabel = t('room.languageLabel', {language: roomLanguageName});
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-center text-gray-900">{roomTitle}</h1>
         <p className="text-sm text-center text-gray-500">{roomCodeLabel}</p>
+        <p className="text-sm text-center text-gray-500">{roomLanguageLabel}</p>
         <p className="text-sm text-center text-gray-500">{statusLabel}</p>
         {roomData.status === 'playing' && (
           <div className="text-2xl font-bold text-center text-red-600">{t('room.discussionTimer', {seconds: timer})}</div>
@@ -425,7 +451,11 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
             )}
           </div>
           {user && (
-            <form className="space-y-2" onSubmit={handleDiscussionSubmit}>
+            <form
+              ref={discussionFormRef}
+              className="space-y-2"
+              onSubmit={handleDiscussionSubmit}
+            >
               <textarea
                 value={discussionInput}
                 onChange={(event) => {
@@ -438,7 +468,13 @@ const MafiaRoom = ({roomId}: MafiaRoomProps) => {
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' && !event.shiftKey) {
                     event.preventDefault();
-                    handleDiscussionSubmit();
+                    const form = discussionFormRef.current;
+                    if (!form) return;
+                    if (typeof form.requestSubmit === 'function') {
+                      form.requestSubmit();
+                    } else {
+                      form.dispatchEvent(new Event('submit', {cancelable: true, bubbles: true}));
+                    }
                   }
                 }}
                 placeholder={t('room.discussion.placeholder')}

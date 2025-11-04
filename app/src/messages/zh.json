@@ -143,6 +143,7 @@
       "roomCreated": "房间已创建，代码：{code}",
       "enterRoomCode": "请输入房间代码。",
       "enterRoomName": "请输入房间名称。",
+      "notEnoughPlayers": "至少需要 3 名玩家才能开始游戏。",
       "joinFailed": "加入房间失败。请检查房间代码或稍后重试。",
       "playerEliminated": "{name} 被淘汰了！",
       "citizensWin": "市民胜利！所有黑手党已被找出。",
@@ -152,9 +153,19 @@
     "lobby": {
       "roomNameLabel": "房间名称",
       "roomNamePlaceholder": "输入房间名称",
+      "languageLabel": "使用语言",
+      "languagePlaceholder": "请选择语言",
       "roomsListTitle": "开放中的房间",
       "noRooms": "目前没有开放的房间。",
       "playersCount": "玩家：{count}人",
+      "languageTag": "使用语言：{language}",
+      "languages": {
+        "en": "英语",
+        "ko": "韩语",
+        "ja": "日语",
+        "zh": "中文",
+        "unknown": "未知"
+      },
       "status": {
         "waiting": "等待中",
         "playing": "游戏进行中",
@@ -177,6 +188,14 @@
       "roles": {
         "mafia": "黑手党",
         "citizen": "市民"
+      },
+      "languageLabel": "使用语言：{language}",
+      "languages": {
+        "en": "英语",
+        "ko": "韩语",
+        "ja": "日语",
+        "zh": "中文",
+        "unknown": "未知"
       },
       "votePrompt": "请选择要淘汰的玩家：",
       "startGame": "开始游戏",

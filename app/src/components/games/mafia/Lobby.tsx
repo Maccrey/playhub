@@ -2,18 +2,21 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {useTranslations} from 'next-intl';
+import {useTranslations, useLocale} from 'next-intl';
 import {usePathname, useRouter} from '@/navigation';
 import {createMafiaRoom, joinMafiaRoom, listenToMafiaRooms, MafiaRoomStatus} from '@/lib/firestore';
 import useUserStore from '@/store/userStore';
 
 const Lobby = () => {
+  type SupportedLanguage = 'en' | 'ko' | 'ja' | 'zh';
+
   type RoomSummary = {
     id: string;
     name: string;
     status: MafiaRoomStatus;
     playerCount: number;
     createdAt: number;
+    language: string;
   };
 
   const [roomName, setRoomName] = useState('');
@@ -23,6 +26,19 @@ const Lobby = () => {
   const pathname = usePathname();
   const { user } = useUserStore();
   const t = useTranslations('Mafia');
+  const locale = useLocale();
+  const supportedLanguages: SupportedLanguage[] = ['en', 'ko', 'ja', 'zh'];
+  const initialLanguage: SupportedLanguage = supportedLanguages.includes(locale as SupportedLanguage)
+    ? (locale as SupportedLanguage)
+    : 'en';
+  const [language, setLanguage] = useState<SupportedLanguage>(initialLanguage);
+  const languageLabelMap: Record<SupportedLanguage | 'unknown', string> = {
+    en: t('lobby.languages.en'),
+    ko: t('lobby.languages.ko'),
+    ja: t('lobby.languages.ja'),
+    zh: t('lobby.languages.zh'),
+    unknown: t('lobby.languages.unknown')
+  };
   const lobbyStatusLabels: Record<MafiaRoomStatus, string> = {
     waiting: t('lobby.status.waiting'),
     playing: t('lobby.status.playing'),
@@ -30,6 +46,10 @@ const Lobby = () => {
     voting: t('lobby.status.voting'),
     ended: t('lobby.status.ended')
   };
+  const languageOptions = supportedLanguages.map((code) => ({
+    value: code,
+    label: languageLabelMap[code]
+  }));
 
   const handleCreateRoom = async () => {
     if (!user) {
@@ -40,10 +60,12 @@ const Lobby = () => {
       window.alert(t('alerts.enterRoomName'));
       return;
     }
-    const newRoomId = await createMafiaRoom(user.uid, roomName);
+    const selectedLanguage = supportedLanguages.includes(language) ? language : initialLanguage;
+    const newRoomId = await createMafiaRoom(user.uid, roomName, selectedLanguage);
     if (newRoomId) {
       window.alert(t('alerts.roomCreated', {code: newRoomId}));
       setRoomName('');
+      setLanguage(selectedLanguage);
       router.push(`${pathname}?room=${newRoomId}`);
     }
   };
@@ -81,12 +103,14 @@ const Lobby = () => {
           const players = room?.players ? Object.keys(room.players).length : 0;
           const createdAtValue = typeof room?.createdAt === 'number' ? room.createdAt : 0;
           const statusValue = (room?.status ?? 'waiting') as MafiaRoomStatus;
+          const languageValue = typeof room?.language === 'string' ? room.language : 'unknown';
           return {
             id,
             name: room?.name?.trim() || id,
             status: statusValue,
             playerCount: players,
-            createdAt: createdAtValue
+            createdAt: createdAtValue,
+            language: languageValue
           };
         })
         .filter((room) => room.status === 'waiting')
@@ -139,6 +163,23 @@ const Lobby = () => {
               maxLength={32}
             />
           </div>
+          <div>
+            <label htmlFor="roomLanguage" className="block text-sm font-medium text-gray-700">
+              {t('lobby.languageLabel')}
+            </label>
+            <select
+              id="roomLanguage"
+              value={language}
+              onChange={(event) => setLanguage(event.target.value as SupportedLanguage)}
+              className="w-full px-4 py-2 mt-1 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              {languageOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={handleCreateRoom}
             className="w-full px-4 py-2 text-lg font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -180,22 +221,27 @@ const Lobby = () => {
             <p className="text-gray-500 text-sm">{t('lobby.noRooms')}</p>
           ) : (
             <ul className="space-y-3">
-              {rooms.map((room) => (
-                <li key={room.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleJoinExistingRoom(room.id)}
-                    className="w-full flex flex-col items-start gap-1 px-4 py-3 text-left border border-gray-200 rounded-md hover:border-blue-500 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <div className="flex w-full items-center justify-between">
-                      <span className="text-lg font-semibold text-gray-900">{room.name}</span>
-                      <span className="text-sm text-gray-500">{lobbyStatusLabels[room.status]}</span>
-                    </div>
-                    <span className="text-sm text-gray-600">{t('lobby.playersCount', {count: room.playerCount})}</span>
-                    <span className="text-xs text-gray-400">{t('room.codeLabel', {roomId: room.id})}</span>
-                  </button>
-                </li>
-              ))}
+              {rooms.map((room) => {
+                const languageKey = (room.language ?? 'unknown') as SupportedLanguage | 'unknown';
+                const languageName = languageLabelMap[languageKey] ?? languageLabelMap.unknown;
+                return (
+                  <li key={room.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleJoinExistingRoom(room.id)}
+                      className="w-full flex flex-col items-start gap-1 px-4 py-3 text-left border border-gray-200 rounded-md hover:border-blue-500 hover:shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <span className="text-lg font-semibold text-gray-900">{room.name}</span>
+                        <span className="text-sm text-gray-500">{lobbyStatusLabels[room.status]}</span>
+                      </div>
+                      <span className="text-sm text-gray-600">{t('lobby.playersCount', {count: room.playerCount})}</span>
+                      <span className="text-xs text-gray-500">{t('lobby.languageTag', {language: languageName})}</span>
+                      <span className="text-xs text-gray-400">{t('room.codeLabel', {roomId: room.id})}</span>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
