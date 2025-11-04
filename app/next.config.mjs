@@ -1,3 +1,6 @@
+process.env.CSS_TRANSFORMER_WASM ??= '1';
+process.env.TAILWIND_DISABLE_OXIDE ??= '1';
+
 import withNextIntl from 'next-intl/plugin';
 
 const withNextIntlPlugin = withNextIntl();
