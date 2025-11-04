@@ -51,7 +51,7 @@ const Header = () => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className={`flex items-center gap-2 focus:outline-none ${navItemClass}`}
             >
-              <Image src="/globe.svg" alt="Language" width={20} height={20} />
+              <Image src="/globe.svg" alt="Language" width={20} height={20} className="h-5 w-5" />
               {localeNames[locale]}
             </button>
             {isDropdownOpen && (
